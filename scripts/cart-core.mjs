@@ -54,6 +54,18 @@ export function buildSp3ndTransaction({ buyerAddress, recipientAddress, amount, 
   return tx;
 }
 
+export function prepareSp3ndTransaction({ order, expectedTotal, ...transaction }) {
+  assertSp3ndPayable(order, expectedTotal);
+  return buildSp3ndTransaction({
+    buyerAddress: transaction.buyerAddress,
+    recipientAddress: order.recipient_address,
+    amount: order.total_usdc,
+    memo: order.memo,
+    blockhash: transaction.blockhash,
+    createBuyerAta: transaction.createBuyerAta,
+  });
+}
+
 export function attachEd25519Signature(tx, signature, expectedPublicKey) {
   const signer = new PublicKey(expectedPublicKey);
   const required = tx.signatures.find((entry) => entry.publicKey.equals(signer));

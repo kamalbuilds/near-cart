@@ -1,13 +1,22 @@
 import base64, json, time, urllib.request
 
-RPC = "https://rpc.mainnet.near.org"
+RPCS = ("https://rpc.mainnet.near.org", "https://free.rpc.fastnear.com")
 
 def view(path, domain=1):
     args = base64.b64encode(json.dumps({"path": path, "predecessor": "example.near", "domain_id": domain}).encode()).decode()
     body = json.dumps({"jsonrpc": "2.0", "id": "cart-spike", "method": "query", "params": {"request_type": "call_function", "account_id": "v1.signer", "method_name": "derived_public_key", "args_base64": args, "finality": "final"}}).encode()
     started = time.perf_counter()
-    with urllib.request.urlopen(urllib.request.Request(RPC, body, {"Content-Type": "application/json"}), timeout=20) as response:
-        result = json.load(response)
+    result = None
+    failures = []
+    for rpc in RPCS:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(rpc, body, {"Content-Type": "application/json"}), timeout=20) as response:
+                result = json.load(response)
+            break
+        except Exception as error:
+            failures.append(f"{rpc}: {error}")
+    if result is None:
+        raise RuntimeError("All NEAR mainnet RPCs failed: " + "; ".join(failures))
     elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
     if "error" in result:
         return result["error"], elapsed_ms
@@ -32,4 +41,4 @@ assert first == second, "same account/path/domain was not deterministic"
 assert first != other, "changing derivation path did not change key"
 assert first.startswith("ed25519:") and len(b58decode(first.split(":", 1)[1])) == 32, "not a 32-byte Ed25519 public key"
 assert "No such domain." in invalid, f"unsupported domain was not rejected: {invalid}"
-print(json.dumps({"network": "NEAR mainnet", "rpc": RPC, "signer": "v1.signer", "account": "example.near (public test vector)", "path": "solana-1", "domain_id": 1, "derived": first, "key_bytes": len(b58decode(first.split(":", 1)[1])), "repeat_equal": first == second, "alternate_path": other, "alternate_path_differs": first != other, "unsupported_domain_99": invalid, "latency_ms": [t1, t2, t3, t4]}, indent=2))
+print(json.dumps({"network": "NEAR mainnet", "rpc_fallback_order": RPCS, "signer": "v1.signer", "account": "example.near (public test vector)", "path": "solana-1", "domain_id": 1, "derived": first, "key_bytes": len(b58decode(first.split(":", 1)[1])), "repeat_equal": first == second, "alternate_path": other, "alternate_path_differs": first != other, "unsupported_domain_99": invalid, "latency_ms": [t1, t2, t3, t4]}, indent=2))
