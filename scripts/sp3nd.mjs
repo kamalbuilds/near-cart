@@ -175,6 +175,11 @@ export async function validSession() {
 
 let rpcId = 0;
 async function rpc(session, method, params, mcpSession) {
+  if (session.expires_at < Math.floor(Date.now() / 1000) + 30) {
+    const next = await refreshSession(session);
+    if (!next) throw new Error('SP3ND session expired and could not be refreshed; run scripts/sp3nd-login.mjs');
+    Object.assign(session, next);
+  }
   const response = await fetch(MCP_URL, {
     method: 'POST',
     headers: {

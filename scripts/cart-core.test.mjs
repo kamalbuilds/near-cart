@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import { readNearSignature, signRequestArgs } from './near-sign.mjs';
 import {
@@ -10,6 +10,7 @@ import {
   assertSp3ndPayable,
   buildSp3ndTransaction,
   attachEd25519Signature,
+  assertPreparedPayment,
   prepareSp3ndTransaction,
   toUsdcAtomicUnits,
 } from './cart-core.mjs';
@@ -73,4 +74,21 @@ test('reads and verifies an Ed25519 signature returned by the live NEAR testnet 
   const returned = readNearSignature({ receipts_outcome: [{ outcome: { status: { SuccessValue: encoded } } }] });
   assert.equal(returned.length, 64);
   assert.equal(nacl.sign.detached.verify(Uint8Array.from([1,2,3,4]), returned, new PublicKey('CjW1ffqMWHMHVtbgscCZWnMJtEaqntWQCEv7n7sctLXh').toBytes()), true);
+});
+
+test('accepts only the exact payment SP3ND quoted and rejects every tampered variant', () => {
+  const buyer = Keypair.generate().publicKey;
+  const recipient = Keypair.generate().publicKey;
+  const prepared = { token_mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', recipient_address: recipient.toBase58(), amount_atomic: '109220000', memo: 'SP3ND Order: ORD-1794595751830' };
+  const make = (overrides = {}) => buildSp3ndTransaction({ buyerAddress: buyer.toBase58(), recipientAddress: recipient.toBase58(), amount: '109.22', memo: prepared.memo, blockhash: Keypair.generate().publicKey.toBase58(), ...overrides });
+
+  assert.equal(assertPreparedPayment(make(), prepared, buyer.toBase58()).amountAtomic, 109220000n);
+  assert.throws(() => assertPreparedPayment(make({ amount: '109.23' }), prepared, buyer.toBase58()), /amount differs/);
+  assert.throws(() => assertPreparedPayment(make({ memo: 'SP3ND Order: ORD-OTHER' }), prepared, buyer.toBase58()), /memo differs/);
+  assert.throws(() => assertPreparedPayment(make({ recipientAddress: Keypair.generate().publicKey.toBase58() }), prepared, buyer.toBase58()), /treasury/);
+  assert.throws(() => assertPreparedPayment(make(), prepared, Keypair.generate().publicKey.toBase58()), /fee payer/);
+  assert.throws(() => assertPreparedPayment(make(), { ...prepared, token_mint: Keypair.generate().publicKey.toBase58() }, buyer.toBase58()), /not in Solana USDC/);
+  const extra = make();
+  extra.add(new TransactionInstruction({ programId: MEMO_PROGRAM_ID, keys: [], data: Buffer.from('extra') }));
+  assert.throws(() => assertPreparedPayment(extra, prepared, buyer.toBase58()), /other than one USDC transfer/);
 });

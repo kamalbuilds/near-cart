@@ -77,3 +77,24 @@ export function attachEd25519Signature(tx, signature, expectedPublicKey) {
   required.signature = sig;
   return tx.serialize({ requireAllSignatures: true, verifySignatures: false });
 }
+
+export function assertPreparedPayment(tx, prepared, buyerAddress) {
+  const buyer = new PublicKey(buyerAddress);
+  if (!tx.feePayer?.equals(buyer)) throw new Error('Prepared transaction fee payer is not the Chain Signatures wallet');
+  if (prepared.token_mint !== USDC_MINT.toBase58()) throw new Error('Prepared payment is not in Solana USDC');
+  const recipientAta = getAssociatedTokenAddressSync(USDC_MINT, new PublicKey(prepared.recipient_address), false, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+  const buyerAta = getAssociatedTokenAddressSync(USDC_MINT, buyer, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+  const transfers = tx.instructions.filter((ix) => ix.programId.equals(TOKEN_PROGRAM_ID));
+  const memos = tx.instructions.filter((ix) => ix.programId.equals(MEMO_PROGRAM_ID));
+  if (tx.instructions.length !== transfers.length + memos.length || transfers.length !== 1 || memos.length !== 1) {
+    throw new Error('Prepared transaction carries instructions other than one USDC transfer and one memo');
+  }
+  const [transfer] = transfers;
+  const [first, mint, destination, authority] = transfer.keys.map((key) => key.pubkey);
+  if (transfer.data[0] !== 12 || !first.equals(buyerAta) || !mint.equals(USDC_MINT) || !destination.equals(recipientAta) || !authority.equals(buyer)) {
+    throw new Error('Prepared USDC transfer does not move funds from the wallet to the SP3ND treasury');
+  }
+  if (transfer.data.readBigUInt64LE(1) !== BigInt(prepared.amount_atomic)) throw new Error('Prepared transfer amount differs from the quoted amount');
+  if (Buffer.from(memos[0].data).toString('utf8') !== prepared.memo) throw new Error('Prepared memo differs from the SP3ND order memo');
+  return { amountAtomic: BigInt(prepared.amount_atomic), memo: prepared.memo, buyerAta, recipientAta };
+}
