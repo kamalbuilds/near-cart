@@ -116,12 +116,12 @@ export async function payOnTestnet({ network, account, total, cartId, asin, onSt
   onStep('signed', { state: 'active', detail: `${account} asks the testnet MPC signer to sign` });
   const { signature, txHash } = await signWithNearAccount({ network, accountId: account, message: tx.serializeMessage() });
   const raw = attachEd25519Signature(tx, signature, payer);
-  onStep('signed', { state: 'done', detail: 'Signature verified against the derived key', link: `https://testnet.nearblocks.io/txns/${txHash}`, id: txHash });
+  onStep('signed', { state: 'done', detail: 'Signature verified against the derived key', link: `https://testnet.nearblocks.io/txns/${txHash}`, ref: txHash });
 
   onStep('paid', { state: 'active', detail: 'Submitting to Solana devnet' });
   const sig = await onDevnet((connection) => connection.sendRawTransaction(raw, { skipPreflight: false, maxRetries: 3 }));
   await onDevnet((connection) => connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed'));
-  onStep('paid', { state: 'done', detail: 'Landed on Solana devnet', link: `https://explorer.solana.com/tx/${sig}?cluster=devnet`, id: sig });
+  onStep('paid', { state: 'done', detail: 'Landed on Solana devnet', link: `https://explorer.solana.com/tx/${sig}?cluster=devnet`, ref: sig });
 
   onStep('verified', { state: 'active', detail: 'Reading the merchant balance back from devnet' });
   const read = await readBackPayment(sig, { amountAtomic, memo });

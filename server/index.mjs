@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { randomUUID } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, statSync, createReadStream } from 'node:fs';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,7 @@ import { assertPreparedPayment, attachEd25519Signature, fundingPlan, parseProduc
 import { getSupportedTokens, quoteExactOutput, SOLANA_USDC_ASSET_ID, SOL_ASSET_ID, SOL_FEE_RESERVE, waitForSwap } from '../scripts/oneclick.mjs';
 import { signWithNearAccount } from '../scripts/chain-sig.mjs';
 import { solanaBalances } from '../scripts/solana.mjs';
+import { DEVNET, devnetBalances, payOnTestnet, serial } from '../scripts/testnet.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -61,6 +63,7 @@ const normOrder = (order) => ({
 });
 
 const quotes = new Map();
+const publicJob = ({ sessionId, ...job }) => ({ ...job, elapsed: job.status === 'running' && job.startedAt ? Number(((Date.now() - Date.parse(job.startedAt)) / 1000).toFixed(1)) : job.seconds });
 const readOrders = () => (existsSync(ORDERS_FILE) ? JSON.parse(readFileSync(ORDERS_FILE, 'utf8')) : []);
 const saveOrder = (entry) => {
   const all = readOrders().filter((row) => row.orderId !== entry.orderId);
@@ -193,6 +196,56 @@ async function runPay(job, sourceAssetId) {
   }
 }
 
+// ---- testnet payment jobs: NEAR testnet MPC signature, Solana devnet transfer, balance read-back
+const TESTNET_STEPS = [
+  ['built', 'Payment built and checked against the quote'],
+  ['signed', 'Signed on NEAR testnet by Chain Signatures'],
+  ['paid', 'Landed on Solana devnet'],
+  ['verified', 'Merchant balance read back from devnet'],
+];
+const testnetJobs = new Map();
+const testnetLedger = { day: '', count: 0, bySession: new Map() };
+const TESTNET_DAILY_CAP = Number(process.env.CART_TESTNET_DAILY_CAP ?? 400);
+const TESTNET_SESSION_CAP = Number(process.env.CART_TESTNET_SESSION_CAP ?? 12);
+
+function admitTestnet(sessionId) {
+  const day = new Date().toISOString().slice(0, 10);
+  if (testnetLedger.day !== day) Object.assign(testnetLedger, { day, count: 0, bySession: new Map() });
+  const mine = testnetLedger.bySession.get(sessionId) ?? 0;
+  if (testnetLedger.count >= TESTNET_DAILY_CAP) throw new HttpError(429, 'The testnet wallet has paid its fill for today. It resets at midnight UTC.');
+  if (mine >= TESTNET_SESSION_CAP) throw new HttpError(429, 'This browser has run the testnet payment many times today. Try again tomorrow.');
+  testnetLedger.count += 1;
+  testnetLedger.bySession.set(sessionId, mine + 1);
+}
+
+async function runTestnetPay(job, quote) {
+  const started = Date.now();
+  const mark = (id, patch) => Object.assign(job.steps.find((entry) => entry.id === id), patch);
+  try {
+    job.queue = testnetQueue;
+    testnetQueue += 1;
+    const result = await serial(async () => {
+      testnetQueue -= 1;
+      job.queue = 0;
+      job.startedAt = new Date().toISOString();
+      return payOnTestnet({
+        network: NETWORK, account: ACCOUNT, total: String(quote.cart.total_amount), cartId: quote.cart.cart_id,
+        asin: quote.cart.items?.[0]?.product_id ?? 'ITEM', onStep: mark,
+      });
+    });
+    job.result = { payer: result.payer, memo: result.memo, nearTx: result.nearTx, solanaTx: result.solanaTx, slot: result.slot, merchant: DEVNET.merchant.toBase58(), mint: DEVNET.mint.toBase58(), amount: String(quote.cart.total_amount) };
+    job.status = 'done';
+  } catch (error) {
+    const active = job.steps.find((entry) => entry.state === 'active') ?? job.steps.find((entry) => entry.state === 'pending');
+    if (active) active.state = 'failed';
+    job.status = 'failed';
+    job.error = error.message;
+  } finally {
+    job.seconds = Number(((Date.now() - started) / 1000).toFixed(1));
+  }
+}
+let testnetQueue = 0;
+
 // ---- routes
 const ZIP = /^\d{5}(?:-\d{4})?$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -312,6 +365,34 @@ const routes = {
     const { wallet_address: address } = await withMcp((_, session) => session);
     const { lamports, usdc } = await solanaBalances(address);
     return { address, account: ACCOUNT, nearNetwork: NETWORK, usdc: formatUnits(usdc, 6), sol: formatUnits(lamports, 9) };
+  },
+
+  'POST /api/testnet/pay': async ({ body, sessionId }) => {
+    const quote = quotes.get(String(body.cartId ?? ''));
+    if (!quote) throw bad('That quote is no longer held. Price the item again.');
+    if (Date.parse(quote.cart.expires_at) <= Date.now()) throw bad('The quote expired. Price the item again.');
+    if (quote.cart.payment_ready !== true) throw bad('The store has not marked this quote payable.');
+    const prior = [...testnetJobs.values()].find((job) => job.sessionId === sessionId && job.status === 'running');
+    if (prior) return publicJob(prior);
+    admitTestnet(sessionId);
+    const id = randomUUID();
+    const job = { id, sessionId, cartId: quote.cart.cart_id, status: 'running', error: null, result: null, seconds: 0, queue: 0, steps: TESTNET_STEPS.map(([sid, label]) => ({ id: sid, label, state: 'pending', detail: null, link: null })) };
+    testnetJobs.set(id, job);
+    if (testnetJobs.size > 300) testnetJobs.delete(testnetJobs.keys().next().value);
+    runTestnetPay(job, quote);
+    return publicJob(job);
+  },
+
+  'GET /api/testnet/job': async ({ query, sessionId }) => {
+    const job = testnetJobs.get(query.get('id'));
+    if (!job || job.sessionId !== sessionId) throw new HttpError(404, 'No testnet payment with that id in this browser session.');
+    return publicJob(job);
+  },
+
+  'GET /api/testnet/wallet': async () => {
+    const { wallet_address: address } = await withMcp((_, session) => session);
+    const held = await devnetBalances(address);
+    return { address, account: ACCOUNT, nearNetwork: 'testnet', usdc: formatUnits(held.usdc, 6), sol: formatUnits(held.lamports, 9), merchant: DEVNET.merchant.toBase58(), mint: DEVNET.mint.toBase58() };
   },
 
   'GET /api/health': async () => ({ ok: true, payEnabled: PAY_ENABLED, network: NETWORK }),
