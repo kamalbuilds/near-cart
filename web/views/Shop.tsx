@@ -95,9 +95,9 @@ export function Shop({ active }: { active: boolean }) {
       <div className="grid gap-x-14 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:grid-rows-[auto_1fr]">
         <section className="pt-4 sm:pt-12 lg:col-start-1 lg:row-start-1">
           <h1 className="display max-w-[11em] text-[clamp(2rem,5.4vw,4.4rem)]">
-            Buy it on Amazon. Pay from any chain.
+            Buy it on Amazon.<br />Pay from any chain.
           </h1>
-          <p className="mt-5 max-w-xl text-[18px] leading-snug text-ink-2">
+          <p className="mt-5 hidden max-w-xl text-[18px] leading-snug text-ink-2 sm:block">
             {testnet
               ? <>Paste a link. The store prices it live, and a NEAR account signs the Solana USDC payment through Chain Signatures.<span className="hidden sm:inline"> Press pay and watch both chains.</span></>
               : 'Paste a link. The store prices it live, NEAR Intents converts whatever you hold into Solana USDC, and a NEAR account signs the payment.'}
