@@ -16,15 +16,15 @@ const trimNum = (v: string) => Number(v).toPrecision(4).replace(/\.?0+$/, '');
 
 function Line({ icon, title, detail, link, linkLabel, tone }: { icon: string; title: string; detail?: string | null; link?: string | null; linkLabel?: string; tone?: 'lime' }) {
   return (
-    <li className="line-in flex items-start gap-3 py-2.5">
+    <li className="line-in flex flex-wrap items-start gap-x-3 gap-y-1 py-2.5 sm:flex-nowrap">
       <StepIcon state={icon} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[12rem] flex-1">
         <p className="text-[15px] font-semibold leading-6">{title}</p>
         {detail && <p className="break-words text-[14px] leading-snug text-mute">{detail}</p>}
       </div>
       {link && (
         <a href={link} target="_blank" rel="noreferrer" aria-label={`${title}, open transaction ${linkLabel ?? ''}`}
-          className={cn('num inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold underline underline-offset-4 transition-colors', tone === 'lime' ? 'bg-lime-pale hover:bg-lime/60' : 'bg-sage hover:bg-sage-2')}>
+          className={cn('num ml-9 inline-flex min-h-11 shrink-0 sm:ml-0 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold underline underline-offset-4 transition-colors', tone === 'lime' ? 'bg-lime-pale hover:bg-lime/60' : 'bg-sage hover:bg-sage-2')}>
           {linkLabel}<svg aria-hidden width="11" height="11" viewBox="0 0 12 12"><path d="M3 9 9 3M4.5 3H9v4.5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </a>
       )}
