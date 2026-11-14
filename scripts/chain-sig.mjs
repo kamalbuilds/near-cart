@@ -50,16 +50,33 @@ async function withRetry(run, attempts = 8) {
   }
 }
 
-export async function signWithNearAccount({ network = 'testnet', accountId, message }) {
+const EXECUTED = ['EXECUTED_OPTIMISTIC', 'EXECUTED', 'FINAL'];
+
+// Broadcast once, then poll the transaction until its receipts have run. The MPC signature comes back in a
+// later receipt; waiting on the broadcast call itself holds the RPC connection for over a minute on testnet.
+export async function signWithNearAccount({ network = 'testnet', accountId, message, timeoutMs = 60_000 }) {
   const account = loadAccount(network, accountId);
-  const outcome = await withRetry(() => account.callFunctionRaw({
+  const rpc = provider(network);
+  const sent = await withRetry(() => account.callFunctionRaw({
     contractId: NETWORKS[network].signer,
     methodName: 'sign',
     args: signRequestArgs(message),
     gas: 300000000000000n,
     deposit: 1n,
+    waitUntil: 'INCLUDED',
   }));
-  return { signature: readNearSignature(outcome), txHash: outcome.transaction.hash };
+  const txHash = sent.transaction.hash;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    try {
+      const status = await rpc.viewTransactionStatus({ txHash, accountId, waitUntil: 'EXECUTED_OPTIMISTIC' });
+      if (EXECUTED.includes(status.final_execution_status)) return { signature: readNearSignature(status), txHash };
+    } catch (error) {
+      if (/did not return an Ed25519 signature/.test(error.message)) throw error;
+    }
+    if (Date.now() > deadline) throw new Error(`NEAR signer transaction ${txHash} did not finish within ${timeoutMs / 1000}s`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
 }
 
 export { bs58 };
