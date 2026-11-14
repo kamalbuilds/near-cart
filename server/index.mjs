@@ -43,8 +43,9 @@ async function withMcp(run) {
 
 // ---- helpers
 const cents = (value) => Number(value ?? 0);
+const cleanBrand = (brand) => (brand ? String(brand).replace(/^Visit the (.+) Store$/i, '$1').replace(/^Brand: ?/i, '').trim() || null : null);
 const normItem = (item) => ({
-  asin: item.product_id, title: item.product_title, image: item.image_url ?? null, brand: item.brand ?? null,
+  asin: item.product_id, title: item.product_title, image: item.image_url ?? null, brand: cleanBrand(item.brand),
   store: item.store ?? 'Amazon', price: cents(item.price), quantity: item.quantity ?? 1,
   verified: item.server_verified === true && item.pricing_status === 'verified', url: item.product_url,
 });

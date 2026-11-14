@@ -68,7 +68,7 @@ export function Receipt({ item, money, kind, expiresAt, orderNumber, status, wat
         <span className="pb-1.5 text-[16px] font-bold">Total</span>
         <p className="num text-[44px] font-bold leading-none tracking-tight">{money.total.toFixed(2)}<span className="ml-2 text-[16px] font-semibold text-mute">USDC</span></p>
         {paid && (
-          <span className="stamp absolute -top-5 right-3 rounded-lg bg-lime px-3.5 py-1.5 text-[22px] font-extrabold tracking-tight text-lime-deep" aria-label="Paid">Paid</span>
+          <span className="stamp absolute -top-6 left-4 rounded-lg bg-lime px-3.5 py-1.5 text-[22px] font-extrabold tracking-tight text-lime-deep" aria-label="Paid">Paid</span>
         )}
       </div>
 

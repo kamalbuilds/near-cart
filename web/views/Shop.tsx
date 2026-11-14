@@ -42,6 +42,11 @@ export function Shop({ active }: { active: boolean }) {
 
   useEffect(() => () => ctl.current?.abort(), []);
   useEffect(() => {
+    if (!auto.current) return;
+    setPaid(false);
+    void lookup(input || FIRST);
+  }, [mode]);
+  useEffect(() => {
     if (auto.current || !active) return;
     auto.current = true;
     setInput(FIRST);
@@ -126,7 +131,10 @@ export function Shop({ active }: { active: boolean }) {
             {quote && item ? (
               <Receipt kind="quote" item={item} money={quote} expiresAt={quote.expiresAt} watch={watch} paid={paid}>
                 {testnet ? (
-                  <TestnetPay quote={quote} expired={expired} onDone={() => setPaid(true)} />
+                  <>
+                    {!paid && <div className="mt-6 rounded-2xl bg-sage/60 p-4"><PayWith compact total={quote.total} value={asset} onChange={setAsset} /></div>}
+                    <TestnetPay quote={quote} expired={expired} onDone={() => setPaid(true)} />
+                  </>
                 ) : (
                   <a href="#pay" className="mt-6 flex h-14 w-full items-center justify-center rounded-full bg-ink text-[17px] font-semibold text-lime hover:bg-lime-deep">Choose how you pay</a>
                 )}

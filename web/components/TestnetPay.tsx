@@ -4,7 +4,6 @@ import { Btn } from '@/components/ui';
 import { useNow } from '@/components/Receipt';
 import { cn } from '@/lib/utils';
 
-const ACCOUNT = 'cart-spike-1313-kamal.testnet';
 
 function StepIcon({ state }: { state: string }) {
   if (state === 'done') return <span className="grid size-6 place-items-center rounded-full bg-good text-white"><svg aria-hidden width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.5 4.8 9 10 3.2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>;
@@ -82,11 +81,11 @@ export function TestnetPay({ quote, expired, onDone }: { quote: Quote; expired: 
     <div className="mt-6">
       {!running && (
         <>
-          <Btn type="button" onClick={start} disabled={pending || expired} className="h-14 w-full text-[17px]">
+          <Btn type="button" onClick={start} disabled={pending || expired} className="sticky bottom-3 z-10 h-14 w-full text-[17px]">
             {pending ? 'Starting…' : failed ? 'Try the payment again' : `Pay ${quote.total.toFixed(2)} USDC from NEAR testnet`}
           </Btn>
           <p className="mt-3 text-[14px] text-mute">
-            {expired ? 'This quote expired. Price the item again.' : <>{ACCOUNT} signs for a Solana devnet wallet. Nothing to install, no funds needed.</>}
+            {expired ? 'This quote expired. Price the item again.' : 'Cart’s NEAR testnet account signs for a Solana devnet wallet. Nothing to install, no funds needed.'}
           </p>
         </>
       )}

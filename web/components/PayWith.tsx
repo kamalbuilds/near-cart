@@ -52,9 +52,9 @@ function Route({ q, total, busy, onRefresh }: { q: SwapQuote; total: number; bus
   );
 }
 
-type Props = { total: number; value: string | null; onChange: (id: string | null) => void; n?: string };
+type Props = { total: number; value: string | null; onChange: (id: string | null) => void; n?: string; compact?: boolean };
 
-export function PayWith({ total, value, onChange, n = '02' }: Props) {
+export function PayWith({ total, value, onChange, n = '02', compact }: Props) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [filter, setFilter] = useState('');
   const [q, setQ] = useState<SwapQuote | null>(null);
@@ -85,23 +85,31 @@ export function PayWith({ total, value, onChange, n = '02' }: Props) {
 
   return (
     <section aria-labelledby="paywith">
+      {compact ? (
+        <p className="text-[16px] font-bold tracking-tight">Pay from any chain</p>
+      ) : (
+        <>
       <SectionHead n={n} title="Pay with"><span id="paywith" className="sr-only">Pay with</span><Chip>{tokens.length ? `${tokens.length} assets on NEAR Intents` : 'Loading assets'}</Chip></SectionHead>
       <p className="mt-1 max-w-xl text-[14px] text-ink-2">Pick what you hold. 1Click converts it into the Solana USDC the order needs, and the Cart wallet pays.</p>
+
+        </>
+      )}
 
       <div className="mt-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Popular assets">
         {quick.map((t) => (
           <button key={t.assetId} role="radio" aria-checked={value === t.assetId} onClick={() => onChange(value === t.assetId ? null : t.assetId)}
-            className={cn('h-11 rounded-full border px-4 text-[14px] font-semibold transition-colors', value === t.assetId ? 'border-ink bg-ink text-lime' : 'border-ink/70 bg-paper hover:bg-lime-pale')}>
-            {t.symbol}<span className="ml-1.5 text-[11px] font-medium opacity-60">{chainName(t.blockchain)}</span>
+            className={cn('h-11 rounded-full px-4 text-[15px] font-semibold transition-colors', value === t.assetId ? 'bg-ink text-lime' : 'bg-paper hover:bg-lime-pale')}>
+            {t.symbol}<span className="ml-1.5 text-[13px] font-medium opacity-60">{chainName(t.blockchain)}</span>
           </button>
         ))}
       </div>
 
-      <details className="group mt-3 rounded-xl border border-line bg-paper/60" onToggle={(e) => setListOpen(e.currentTarget.open)}>
+      {!compact && (
+      <details className="group mt-3 rounded-xl bg-paper/60" onToggle={(e) => setListOpen(e.currentTarget.open)}>
         <summary className="flex h-11 cursor-pointer list-none items-center justify-between px-4 text-[14px] font-semibold">
           All assets and chains <span aria-hidden className="text-mute transition-transform group-open:rotate-180">⌄</span>
         </summary>
-        <div className="border-t border-line p-3">
+        <div className="p-3">
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Search a token or chain, like near or base" aria-label="Search assets"
             className="h-11 w-full rounded-lg border border-ink/60 bg-white px-3 text-[14px] focus:outline-none" />
           <ul className="mt-2 max-h-64 overflow-auto" role="listbox" aria-label="Assets">
@@ -118,11 +126,19 @@ export function PayWith({ total, value, onChange, n = '02' }: Props) {
           </ul>
         </div>
       </details>
+      )}
 
       {!(total > 0) && <p className="mt-4 text-[14px] text-mute">The route prices once a quote is on the receipt.</p>}
       {error && <ErrorNote>{error}</ErrorNote>}
       {busy && !q && <p className="mt-5 text-[14px] font-medium pulse">Asking 1Click for a dry quote…</p>}
-      {q && <Route q={q} total={total} busy={busy} onRefresh={() => setTick((v) => v + 1)} />}
+      {q && !compact && <Route q={q} total={total} busy={busy} onRefresh={() => setTick((v) => v + 1)} />}
+      {q && compact && (
+        <p className="mt-3 text-[15px] leading-snug" aria-live="polite">
+          {q.direct
+            ? `Solana USDC needs no swap: ${total.toFixed(2)} USDC goes straight to the wallet.`
+            : <>You send <span className="num font-bold">{Number(q.amountIn).toPrecision(5).replace(/\.?0+$/, '')} {q.symbol}</span> on {chainName(q.chain)}. NEAR Intents converts it into exactly {total.toFixed(2)} USDC on Solana in about {q.seconds ?? 20} s, and the NEAR account signs the payment. Live 1Click quote.</>}
+        </p>
+      )}
     </section>
   );
 }

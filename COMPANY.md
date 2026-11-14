@@ -24,7 +24,7 @@ Anyone who holds crypto on NEAR, or on any chain NEAR Intents reaches, and wants
 
 ## Try it in 60 seconds
 
-Open https://near-cart.earn-shield-alerts.workers.dev, wait for the receipt to print, press **Pay 5.57 USDC from NEAR testnet**, then open the two transaction links.
+Open https://near-cart.earn-shield-alerts.workers.dev, wait for the receipt to print, press the **Pay ... USDC from NEAR testnet** button, then open the two transaction links.
 
 ## Why NEAR
 
