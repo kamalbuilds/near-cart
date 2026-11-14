@@ -9,7 +9,7 @@ Paying for Amazon with crypto usually starts with selling tokens.
 
 Built at #NEARHackathon: Cart. A NEAR key signs a Solana USDC payment through Chain Signatures and SP3ND places the real Amazon order. About 9 seconds.
 
-https://near-cart.earn-shield-alerts.workers.dev @NEARProtocol
+https://near-cart.nearbuild.workers.dev @NEARProtocol
 ```
 
 ## B (259 characters)
@@ -17,7 +17,7 @@ https://near-cart.earn-shield-alerts.workers.dev @NEARProtocol
 ```
 Paste an amazon.com link. Cart prints a live SP3ND quote, then pays it from a NEAR testnet account through Chain Signatures. The receipt links the NEAR tx that signed and the Solana tx that paid.
 
-Built at #NEARHackathon. https://near-cart.earn-shield-alerts.workers.dev @NEARProtocol
+Built at #NEARHackathon. https://near-cart.nearbuild.workers.dev @NEARProtocol
 ```
 
 ## C (273 characters)
@@ -25,7 +25,7 @@ Built at #NEARHackathon. https://near-cart.earn-shield-alerts.workers.dev @NEARP
 ```
 Raise the amount after Cart signs and the payment is refused by the pre-signing check, by the client and by Solana devnet.
 
-Built at #NEARHackathon: shop Amazon from a NEAR account, funded from 231 assets on 40 chains via NEAR Intents. https://near-cart.earn-shield-alerts.workers.dev @NEARProtocol
+Built at #NEARHackathon: shop Amazon from a NEAR account, funded from 231 assets on 40 chains via NEAR Intents. https://near-cart.nearbuild.workers.dev @NEARProtocol
 ```
 
 ## Long form
@@ -37,7 +37,7 @@ We built Cart at #NEARHackathon so a NEAR account pays directly. Open the page a
 
 Raise the amount after signing and the payment is refused by the pre-signing check, by the client and by Solana devnet. On mainnet, NEAR Intents funds the wallet from 231 assets on 40 chains.
 
-Try it: https://near-cart.earn-shield-alerts.workers.dev
+Try it: https://near-cart.nearbuild.workers.dev
 
 @NEARProtocol @NearBuilders
 ```

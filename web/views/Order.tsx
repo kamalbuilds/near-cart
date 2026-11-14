@@ -48,7 +48,7 @@ export function OrderView({ orderId }: { orderId: string }) {
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     if (d?.job?.status !== 'running') return;
-    const id = setInterval(() => void load(), 3000);
+    const id = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 10000);
     return () => clearInterval(id);
   }, [d?.job?.status, load]);
 

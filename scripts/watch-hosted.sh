@@ -2,7 +2,7 @@
 # Keeps the hosted demo alive: restarts the API, tunnel and Worker only when the local API or the tunnel stops answering.
 # A 429 from the edge is the platform request cap, not a dead API: restarting then would drop running payments and the quote cache.
 cd "$(dirname "$0")/.."
-LIVE="${CART_LIVE_URL:-https://near-cart.earn-shield-alerts.workers.dev}"
+LIVE="${CART_LIVE_URL:-https://near-cart.nearbuild.workers.dev}"
 PORT="${CART_API_PORT:-4391}"
 while true; do
   local_ok=0; curl -fsS -m 10 "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1 && local_ok=1

@@ -87,6 +87,7 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
   useEffect(() => {
     if (!job || job.status !== 'running') return;
     const timer = setTimeout(async () => {
+      if (document.visibilityState !== 'visible') { setJob({ ...job }); return; }
       try {
         const next = await api<TestnetJob>(`/api/testnet/job?id=${encodeURIComponent(job.id)}`);
         if (!alive.current) return;
