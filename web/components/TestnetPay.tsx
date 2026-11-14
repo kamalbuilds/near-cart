@@ -12,32 +12,60 @@ function StepIcon({ state }: { state: string }) {
   return <span className="size-6 rounded-full bg-sage" />;
 }
 
-export function Proof({ job, total }: { job: TestnetJob; total: number }) {
-  const r = job.result!;
+const trimNum = (v: string) => Number(v).toPrecision(4).replace(/\.?0+$/, '');
+
+function Line({ icon, title, detail, link, linkLabel, tone }: { icon: string; title: string; detail?: string | null; link?: string | null; linkLabel?: string; tone?: 'lime' }) {
   return (
-    <div className="mt-6" aria-live="polite">
-      <p className="text-[20px] font-bold leading-tight tracking-tight">Paid in {job.seconds.toFixed(1)} seconds, two chains, no wallet installed.</p>
-      <div className="mt-4 grid gap-2.5">
-        {r.route && !r.route.direct && (
-          <>
-            <div className="rounded-2xl bg-sage/60 px-4 py-3">
-              <span className="block text-[15px] font-bold">NEAR Intents routes {Number(r.route.amountIn).toPrecision(4).replace(/\.?0+$/, '')} {r.route.symbol}</span>
-              <span className="block text-[14px] text-mute">Live 1Click quote for exactly {Number(r.amount).toFixed(2)} USDC on Solana, about {r.route.seconds ?? 20} s on mainnet</span>
-            </div>
-            <div aria-hidden className="mx-auto -my-1 h-3" />
-          </>
-        )}
-        <a href={`https://testnet.nearblocks.io/txns/${r.nearTx}`} target="_blank" rel="noreferrer" className="group flex items-center justify-between gap-3 rounded-2xl bg-sage px-4 py-3 transition-colors hover:bg-sage-2">
-          <span><span className="block text-[15px] font-bold">NEAR testnet signs</span><span className="block text-[14px] text-mute">Chain Signatures returns an Ed25519 signature for {short(r.payer, 4, 4)}</span></span>
-          <span className="num shrink-0 text-[14px] font-semibold underline underline-offset-4">{short(r.nearTx, 4, 4)}</span>
-        </a>
-        <div aria-hidden className="mx-auto -my-1 flex h-6 items-center gap-2 text-[13px] font-semibold text-mute"><svg width="14" height="18" viewBox="0 0 14 18"><path d="M7 1v14M2 10.5 7 16l5-5.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>signature</div>
-        <a href={`https://explorer.solana.com/tx/${r.solanaTx}?cluster=devnet`} target="_blank" rel="noreferrer" className="group flex items-center justify-between gap-3 rounded-2xl bg-lime-pale px-4 py-3 transition-colors hover:bg-lime/60">
-          <span><span className="block text-[15px] font-bold">Solana devnet pays {total.toFixed(2)} USDC</span><span className="block text-[14px] text-lime-deep">Merchant balance rose by exactly {Number(r.amount).toFixed(2)}, read back at slot {r.slot.toLocaleString('en-US')}</span></span>
-          <span className="num shrink-0 text-[14px] font-semibold underline underline-offset-4">{short(r.solanaTx, 4, 4)}</span>
-        </a>
+    <li className="line-in flex items-start gap-3 py-2.5">
+      <StepIcon state={icon} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[15px] font-semibold leading-6">{title}</p>
+        {detail && <p className="break-words text-[14px] leading-snug text-mute">{detail}</p>}
       </div>
-      <p className="mt-3 text-[14px] text-mute">Memo on chain: {r.memo}</p>
+      {link && (
+        <a href={link} target="_blank" rel="noreferrer" aria-label={`${title}, open transaction ${linkLabel ?? ''}`}
+          className={cn('num inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold underline underline-offset-4 transition-colors', tone === 'lime' ? 'bg-lime-pale hover:bg-lime/60' : 'bg-sage hover:bg-sage-2')}>
+          {linkLabel}<svg aria-hidden width="11" height="11" viewBox="0 0 12 12"><path d="M3 9 9 3M4.5 3H9v4.5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </a>
+      )}
+    </li>
+  );
+}
+
+function shareUrl(job: TestnetJob, quote: Quote): string {
+  const r = job.result!;
+  const title = (quote.items[0]?.title ?? 'an Amazon item').split(/[,|(-]/)[0].trim().slice(0, 60);
+  const text = `Bought ${title} on Amazon with no wallet installed. A NEAR testnet account signed, Solana devnet paid ${quote.total.toFixed(2)} USDC, ${job.seconds.toFixed(1)} s.\nNEAR: https://testnet.nearblocks.io/txns/${r.nearTx}\nSolana: https://explorer.solana.com/tx/${r.solanaTx}?cluster=devnet`;
+  return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(location.origin)}`;
+}
+
+function Ledger({ job, quote }: { job: TestnetJob; quote: Quote }) {
+  const route = job.result?.route ?? job.route;
+  const done = job.status === 'done' && job.result;
+  const total = quote.total;
+  return (
+    <div className="mt-5" aria-live="polite">
+      <p className="label">Payment receipt</p>
+      <ol className="mt-1 divide-y divide-dashed divide-line">
+        {route && !route.direct && (
+          <Line icon="done" title={`NEAR Intents routes ${trimNum(route.amountIn)} ${route.symbol}`} detail={`Live 1Click quote for exactly ${total.toFixed(2)} USDC on Solana, about ${route.seconds ?? 20} s on mainnet`} />
+        )}
+        {job.steps.filter((s) => s.state !== 'pending').map((s) => (
+          <Line key={s.id} icon={s.state} title={s.label}
+            detail={s.id === 'paid' && s.state === 'done' ? `${total.toFixed(2)} USDC from the Cart wallet to the merchant, memo on chain` : s.id === 'verified' && done ? `Merchant balance rose by exactly ${Number(job.result!.amount).toFixed(2)} USDC, read at slot ${job.result!.slot.toLocaleString('en-US')}` : s.detail}
+            link={s.state === 'done' ? s.link : null} linkLabel={s.ref ? short(s.ref, 4, 4) : undefined} tone={s.id === 'paid' ? 'lime' : undefined} />
+        ))}
+      </ol>
+      {done && (
+        <div className="line-in mt-3 border-t-2 border-dashed border-ink/70 pt-4">
+          <p className="text-[20px] font-bold leading-tight tracking-tight">Paid in {job.seconds.toFixed(1)} seconds, two chains, no wallet installed.</p>
+          <p className="mt-1.5 break-words text-[14px] text-mute">Memo on chain: {job.result!.memo}</p>
+          <a href={shareUrl(job, quote)} target="_blank" rel="noreferrer" className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-lime transition-colors hover:bg-lime-deep">
+            <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23.3 22h-6.6l-5.2-6.8L5.6 22H2.5l7.7-8.8L1.8 2h6.8l4.7 6.2L18.9 2Zm-1.2 18h1.8L7.4 3.9H5.5L17.7 20Z" /></svg>
+            Post result on X
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -82,13 +110,12 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
     }
   }
 
-  if (job?.status === 'done' && job.result) return <Proof job={job} total={quote.total} />;
-
   const running = job?.status === 'running';
   const failed = job?.status === 'failed';
+  const finished = job?.status === 'done' && !!job.result;
   return (
     <div className="contents">
-      {!running && (
+      {!running && !finished && (
         <>
           <Btn type="button" onClick={start} disabled={pending || expired} className="sticky bottom-3 z-10 mt-5 h-14 w-full text-[17px]">
             {pending ? 'Starting…' : failed ? 'Try the payment again' : `Pay ${quote.total.toFixed(2)} USDC on testnet`}
@@ -99,24 +126,12 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
         </>
       )}
       {running && job && (
-        <div aria-live="polite" className="mt-5">
-          <div className="flex items-baseline justify-between">
-            <p className="text-[18px] font-bold tracking-tight">{job.queue > 0 ? `Waiting for the signer, ${job.queue} ahead` : 'Paying on two chains'}</p>
-            <p className="num text-[18px] font-bold">{((now - startedAt) / 1000).toFixed(1)} s</p>
-          </div>
-          <ol className="mt-4 space-y-3">
-            {job.steps.map((s) => (
-              <li key={s.id} className="flex items-start gap-3">
-                <StepIcon state={s.state} />
-                <div className="min-w-0">
-                  <p className={cn('text-[15px] font-semibold leading-6', s.state === 'pending' && 'text-mute')}>{s.label}</p>
-                  {s.detail && s.state !== 'pending' && <p className="break-words text-[14px] text-mute">{s.detail}</p>}
-                </div>
-              </li>
-            ))}
-          </ol>
+        <div className="mt-5 flex items-baseline justify-between">
+          <p className="text-[18px] font-bold tracking-tight">{job.queue > 0 ? `Waiting for the signer, ${job.queue} ahead` : 'Printing the receipt as each chain answers'}</p>
+          <p className="num shrink-0 whitespace-nowrap pl-3 text-[18px] font-bold">{((now - startedAt) / 1000).toFixed(1)} s</p>
         </div>
       )}
+      {job && (running || finished || job.steps.some((s) => s.state !== 'pending')) && <Ledger job={job} quote={quote} />}
       {(error || failed) && (
         <p role="alert" className="mt-3 rounded-xl bg-bad/10 px-4 py-3 text-[15px] font-medium text-[#8a1c21]">
           {error ?? job?.error}

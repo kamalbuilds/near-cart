@@ -140,11 +140,22 @@ export function PayWith({ total, value, onChange, n = '02', compact }: Props) {
       {busy && !q && <p className="mt-5 text-[14px] font-medium pulse">Asking 1Click for a dry quote…</p>}
       {q && !compact && <Route q={q} total={total} busy={busy} onRefresh={() => setTick((v) => v + 1)} />}
       {q && compact && (
-        <p className="mt-3 text-[14px] leading-snug text-ink-2" aria-live="polite">
-          {q.direct
-            ? 'Solana USDC needs no swap on mainnet.'
-            : <>Live 1Click quote: <span className="num font-bold text-ink">{Number(q.amountIn).toPrecision(4).replace(/\.?0+$/, '')} {q.symbol}</span> becomes exactly {total.toFixed(2)} USDC on Solana in about {q.seconds ?? 20} s. This run pays from the funded testnet wallet.</>}
-        </p>
+        <div className="mt-4" aria-live="polite">
+          <div key={`${q.symbol}-${q.amountIn}`} className="line-in grid grid-cols-[1fr_auto_1fr] items-stretch gap-2">
+            <div className="min-w-0 rounded-xl bg-paper px-3 py-2.5">
+              <p className="num truncate text-[20px] font-bold leading-tight">{q.direct ? total.toFixed(2) : Number(q.amountIn).toPrecision(3).replace(/\.?0+$/, '')}</p>
+              <p className="text-[13px] text-mute">{q.symbol} on {chainName(q.chain)}</p>
+            </div>
+            <span aria-hidden className="grid place-items-center text-mute"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M1 7h19M14 1l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+            <div className="min-w-0 rounded-xl bg-lime-pale px-3 py-2.5">
+              <p className="num truncate text-[20px] font-bold leading-tight">{total.toFixed(2)}</p>
+              <p className="text-[13px] text-lime-deep">USDC on Solana, exact</p>
+            </div>
+          </div>
+          <p className="mt-2.5 text-[13px] leading-snug text-mute">
+            {q.direct ? 'Solana USDC needs no swap.' : `Live 1Click quote, about ${q.seconds ?? 20} s on mainnet.`} This run pays from the funded testnet wallet.
+          </p>
+        </div>
       )}
     </section>
   );

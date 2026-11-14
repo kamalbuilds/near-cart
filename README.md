@@ -9,7 +9,7 @@ Live: https://near-cart.earn-shield-alerts.workers.dev
 ## Do this, see that
 
 1. Open the live URL. The receipt prints a live SP3ND quote for a real Amazon item within seconds.
-2. Press **Pay from NEAR testnet** (the button carries the quote total). About 9 seconds later the receipt is stamped Paid and shows two links: the NEAR testnet transaction where Chain Signatures signed, and the Solana devnet transaction that paid. The merchant balance is read back from devnet and equals the quote to the micro-USDC.
+2. Pick any asset under Pay from any chain (ETH is preselected) and watch it turn into the exact USDC total with a live 1Click route. Press **Pay ... USDC on testnet** (the button carries the quote total). The receipt prints line by line as each chain answers, and about 9 seconds later it is stamped Paid with two links: the NEAR testnet transaction where Chain Signatures signed, and the Solana devnet transaction that paid. The merchant balance is read back from devnet and equals the quote to the micro-USDC. **Post result on X** opens a prefilled post carrying both transaction links.
 3. Paste any amazon.com link or ASIN, or press Instant Pot, and pay again. Each run is a fresh pair of transactions.
 4. Switch to **Mainnet** for the funded flow: US shipping form, a 1Click asset picker with a dry route quote, and the SP3ND order paid in Solana USDC.
 

@@ -17,6 +17,7 @@ Anyone who holds crypto on NEAR, or on any chain NEAR Intents reaches, and wants
 | Fact | Evidence |
 |---|---|
 | A cold visitor pays a live Amazon quote on two chains in 9.1 s with nothing installed | NEAR [FuLvRaYix...HfoS](https://testnet.nearblocks.io/txns/FuLvRaYixAYo36myyeZczp5iPbgfYFkDDXeYCmVyHfoS), Solana devnet [4DTDZ1Bm...1yyE](https://explorer.solana.com/tx/4DTDZ1BmtLpMsBGo5FNGzfrS9k27esj5htTi8vRDyWVRMyr2mzo1L1N9E5vMBNwCrD2uvMfygAhwJJbUKPgi1yyE?cluster=devnet) |
+| The payment receipt prints line by line as each chain answers, each line with its transaction link, and ends in a Post result on X link | NEAR [ELFiRhYq...CGj](https://testnet.nearblocks.io/txns/ELFiRhYq5xxc97XJLKysuci3zrUPdLiuN4PGoEuYHCGj), Solana [4nwL1yuX...DhgT](https://explorer.solana.com/tx/4nwL1yuXpKiP1RDStK27sW1xgEi8LnR2oFWsZfkgUs52WoKLjy8QayJKZfesGRUUACGW14PsV5PcGZSZAVZaDhgT?cluster=devnet), paid in 9.7 s |
 | The merchant balance rises by exactly the quote total | `node scripts/testnet-run.mjs B00006IE7J` prints `Merchant balance rose by exactly 5.57 USDC` |
 | A forged amount is refused before signing, by the client and by Solana | `node scripts/testnet-tamper.mjs`, NEAR [6kGsM4rf...EvaG](https://testnet.nearblocks.io/txns/6kGsM4rf2AxFt4cP6EQKrvGEBu2SQPVcoqU5ywh3EvaG) |
 | One NEAR account owns one Solana address on testnet and mainnet | `CjW1ffqMWHMHVtbgscCZWnMJtEaqntWQCEv7n7sctLXh`, signing [3C75cxFK...H1L18EMz](https://testnet.nearblocks.io/txns/3C75cxFKcWUgKHQF6vL5uYfuNDkovGjmJtenH1L18EMz) |

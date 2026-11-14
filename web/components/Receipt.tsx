@@ -64,7 +64,7 @@ export function Receipt({ item, money, kind, expiresAt, orderNumber, status, wat
         {money.fee > 0 && <Line k="Fees" v={money.fee.toFixed(2)} />}
       </div>
 
-      <div className="relative mt-3 flex items-end justify-between rounded-2xl bg-sage px-5 py-4">
+      <div className={cn('relative flex items-end justify-between rounded-2xl bg-sage px-5 py-4', paid ? 'mt-9' : 'mt-3')}>
         <span className="pb-1.5 text-[16px] font-bold">Total</span>
         <p className="num text-[44px] font-bold leading-none tracking-tight">{money.total.toFixed(2)}<span className="ml-2 text-[16px] font-semibold text-mute">USDC</span></p>
         {paid && (

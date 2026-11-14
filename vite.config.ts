@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./web', import.meta.url)) } },
   server: {
     host: '127.0.0.1',
-    proxy: { '/api': 'http://127.0.0.1:4174' },
+    proxy: { '/api': process.env.CART_API ?? 'http://127.0.0.1:4174' },
   },
   build: { outDir: '../dist', emptyOutDir: true },
 });
