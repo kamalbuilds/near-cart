@@ -321,7 +321,7 @@ Cards are universally pill-rounded — `{rounded.xl}` 24 px is the brand's signa
 - **Ink** (`{colors.ink}` — `#0e0f0c`): Near-black with a hint of olive warmth — the brand's default text and headings color.
 - **Ink Deep** (`{colors.ink-deep}` — `#163300`): A deep forest-green ink used on positive-state surfaces.
 - **Body** (`{colors.body}` — `#454745`): Secondary body text.
-- **Mute** (`{colors.mute}` — `#868685`): Lowest-priority text — captions, placeholder, fine print.
+- **Mute** (`{colors.mute}` — `#868685`): Lowest-priority text — captions and fine print.
 
 ### Semantic
 - **Positive** (`{colors.positive}` — `#2ead4b`): Success indicator.

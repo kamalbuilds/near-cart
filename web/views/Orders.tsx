@@ -41,8 +41,8 @@ export function OrdersView({ active }: { active: boolean }) {
                 return (
                   <li key={o.orderId}>
                     <a href={`#/order/${encodeURIComponent(o.orderId)}`} className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-lime-pale sm:px-5">
-                      <div className="grid size-16 shrink-0 place-items-center rounded-lg border border-line bg-white p-1">
-                        {item?.image ? <img src={item.image} alt="" className="max-h-full max-w-full object-contain mix-blend-multiply" /> : null}
+                      <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-white p-1">
+                        {item?.image ? <img src={item.image} alt="" className="size-full object-contain mix-blend-multiply" /> : null}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[16px] font-semibold">{item?.title ?? o.orderNumber}</p>

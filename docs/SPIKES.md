@@ -6,8 +6,6 @@ Run on 2026-11-13 before product implementation.
 
 Claim: Anonymous requests must not receive a usable MCP tool list; the owner OAuth token is required for `tools/list` and quotes.
 
-Verdict: Auth gate CONFIRMED. Authenticated tools/list and quote UNTESTED until the owner completes device sign-in.
-
 Measured: `POST https://mcp.sp3nd.shop/mcp` with a valid MCP `initialize` body and no bearer token returned HTTP 401 with `invalid_token` / `Missing Authorization header`. `GET /mcp` also returned HTTP 401. The public resource metadata identifies `https://happy-dragon-88.authkit.app`, resource `https://mcp.sp3nd.shop/mcp`, scopes `openid profile offline_access`.
 
 Negative case: The unauthenticated initialize request returned 401, not an empty or successful tool list. Reproduce with:
@@ -26,8 +24,6 @@ Blocks product: Yes for the live SP3ND quote and order calls until the session i
 ## NEAR Chain Signatures, Solana Ed25519 derivation
 
 Claim: On NEAR mainnet, `v1.signer.derived_public_key` returns the same 32-byte Ed25519 key for the same account/path/domain on two reads and a different key for a different path.
-
-Verdict: Mainnet derivation and testnet Ed25519 signing CONFIRMED. Owner-account signing on mainnet remains UNTESTED.
 
 Measured: `python3 spikes/chain-signatures/probe.py` made four finalized mainnet reads taking 520.2, 307.3, 290.1, and 678.6 ms through the fallback order `https://rpc.mainnet.near.org`, `https://free.rpc.fastnear.com`. The first endpoint returned HTTP 429 during this run, and the fallback succeeded. `example.near` + `solana-1` + domain 1 returned `ed25519:3T1x6LQ9EtChr7sn83qYsBEUN3JWDEGiRSNb1DBi2U8d` (32 decoded bytes). `solana-2` returned `ed25519:GurGknJTnz3XjMZBDaa66ccTEJHpX9qDv5fP8RW1GBTH`.
 

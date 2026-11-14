@@ -90,7 +90,7 @@ export function OrderView({ orderId }: { orderId: string }) {
     <div className="pb-24 pt-8 sm:pt-12">
       <a href="#/orders" className="text-[13px] font-semibold underline underline-offset-4">All orders</a>
       <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2">
-        <h1 className="display text-[clamp(2.25rem,6vw,4.5rem)]">{order.orderNumber}</h1>
+        <h1 className="display text-[clamp(1.9rem,4.4vw,3.4rem)]">{order.orderNumber}</h1>
         <Chip tone={paid ? 'good' : job?.status === 'failed' ? 'bad' : 'warn'} className="mb-2"><Dot tone={paid ? 'good' : job?.status === 'failed' ? 'bad' : 'warn'} />{paid ? order.status : job?.status === 'running' ? 'Settling' : job?.status === 'failed' ? 'Needs attention' : 'Awaiting payment'}</Chip>
       </div>
 
@@ -112,7 +112,7 @@ export function OrderView({ orderId }: { orderId: string }) {
             <>
               <section aria-labelledby="wallet">
                 <SectionHead n="05" title="Cart wallet"><span id="wallet" className="sr-only">Cart wallet</span></SectionHead>
-                <div className="mt-4 rounded-[var(--radius-card)] border border-ink/70 bg-paper p-5">
+                <div className="card mt-4 rounded-[var(--radius-card)] border border-ink/70 bg-paper p-5">
                   <dl className="grid gap-4 sm:grid-cols-3">
                     <div><dt className="label">Solana address</dt><dd className="num mt-1 break-all text-[13px]">{wallet ? <a className="underline underline-offset-4" href={`https://solscan.io/account/${wallet.address}`} target="_blank" rel="noreferrer">{short(wallet.address, 6, 6)}</a> : '…'}</dd></div>
                     <div><dt className="label">USDC held</dt><dd className="num mt-1 text-[22px]">{wallet?.usdc ?? '…'}</dd></div>

@@ -30,7 +30,7 @@ function Hop({ k, v, sub, last }: { k: string; v: string; sub?: string; last?: b
 function Route({ q, total, busy, onRefresh }: { q: SwapQuote; total: number; busy: boolean; onRefresh: () => void }) {
   const trim = (s: string) => (s.length > 10 ? Number(s).toPrecision(6).replace(/\.?0+$/, '') : s);
   return (
-    <div className="mt-5 rounded-[var(--radius-card)] bg-ink p-5 text-lime sm:p-6" aria-label="Payment route">
+    <div className="card mt-5 rounded-[var(--radius-card)] bg-ink p-5 text-lime sm:p-6" aria-label="Payment route">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-lime/70">Route · dry quote from 1Click</p>
         <button onClick={onRefresh} className="text-[12px] font-semibold text-lime underline underline-offset-4" disabled={busy}>{busy ? 'Refreshing' : 'Refresh'}</button>
@@ -61,6 +61,7 @@ export function PayWith({ total, value, onChange, n = '02' }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
+  const [listOpen, setListOpen] = useState(false);
   const seq = useRef(0);
 
   useEffect(() => { loadTokens().then(setTokens).catch((e: Error) => setError(e.message)); }, []);
@@ -96,7 +97,7 @@ export function PayWith({ total, value, onChange, n = '02' }: Props) {
         ))}
       </div>
 
-      <details className="group mt-3 rounded-xl border border-line bg-paper/60">
+      <details className="group mt-3 rounded-xl border border-line bg-paper/60" onToggle={(e) => setListOpen(e.currentTarget.open)}>
         <summary className="flex h-11 cursor-pointer list-none items-center justify-between px-4 text-[14px] font-semibold">
           All assets and chains <span aria-hidden className="text-mute transition-transform group-open:rotate-180">⌄</span>
         </summary>
@@ -104,7 +105,7 @@ export function PayWith({ total, value, onChange, n = '02' }: Props) {
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Search a token or chain, like near or base" aria-label="Search assets"
             className="h-11 w-full rounded-lg border border-ink/60 bg-white px-3 text-[14px] focus:outline-none" />
           <ul className="mt-2 max-h-64 overflow-auto" role="listbox" aria-label="Assets">
-            {shown.map((t) => (
+            {listOpen && shown.map((t) => (
               <li key={t.assetId} role="option" aria-selected={value === t.assetId}>
                 <button onClick={() => onChange(t.assetId)} className={cn('flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[14px] hover:bg-lime-pale', value === t.assetId && 'bg-lime-pale font-semibold')}>
                   <span className="w-20 shrink-0 font-semibold">{t.symbol}</span>
@@ -113,7 +114,7 @@ export function PayWith({ total, value, onChange, n = '02' }: Props) {
                 </button>
               </li>
             ))}
-            {!shown.length && <li className="px-3 py-4 text-[14px] text-mute">No asset matches "{filter}".</li>}
+            {listOpen && !shown.length && <li className="px-3 py-4 text-[14px] text-mute">No asset matches "{filter}".</li>}
           </ul>
         </div>
       </details>

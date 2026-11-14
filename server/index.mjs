@@ -128,7 +128,9 @@ async function fundWallet(job, plan, sourceAssetId, wallet) {
         depositAddress: result.quote.depositAddress, depositMemo: result.quote.depositMemo ?? null, symbol: origin.symbol, chain: origin.blockchain,
         amountIn: result.quote.amountInFormatted, deadline: result.quote.deadline ?? result.quoteRequest?.deadline,
       });
-      watch.push(waitForSwap(result.quote.depositAddress, result.quote.depositMemo).then(() => { row.state = 'swapped'; }));
+      const swap = waitForSwap(result.quote.depositAddress, result.quote.depositMemo).then(() => { row.state = 'swapped'; });
+      swap.catch(() => {});
+      watch.push(swap);
     }
     job.funding.push(row);
   }
@@ -144,6 +146,10 @@ async function runPay(job, sourceAssetId) {
       const needUsdc = toUsdcAtomicUnits(order.total_amount);
       const wallet = session.wallet_address;
       step(job, 'created', { state: 'done', detail: order.order_number });
+      if (PAID.includes(String(order.status).toLowerCase())) {
+        for (const id of ['funded', 'prepared', 'signed', 'paid', 'confirmed']) step(job, id, { state: 'done', detail: `Already ${order.status}` });
+        return;
+      }
 
       let balances = await solanaBalances(wallet);
       const plan = fundingPlan({ usdc: balances.usdc, lamports: balances.lamports, needUsdc, solReserve: BigInt(SOL_FEE_RESERVE) });
@@ -218,7 +224,7 @@ const routes = {
     if (!ZIP.test(postal)) throw bad('Use a US ZIP code, like 10001.');
     const quantity = Number(body.quantity ?? 1);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 5) throw bad('Quantity is 1 to 5.');
-    const cart = await withMcp((mcp) => quoteWithRetry(mcp, { productUrl: url, quantity, country: 'US', postal, attempts: 4 }));
+    const cart = await withMcp((mcp) => quoteWithRetry(mcp, { productUrl: url, quantity, country: 'US', postal, attempts: 3 }));
     quotes.set(cart.cart_id, { cart, postal });
     return { asin, ...normCart(cart), zip: postal };
   },

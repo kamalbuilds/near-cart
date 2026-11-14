@@ -25,6 +25,7 @@ export function Field({ label, hint, className, ...rest }: InputHTMLAttributes<H
     <label className={cn('block', className)}>
       <span className="label">{label}</span>
       <input
+        aria-label={label}
         {...rest}
         className="mt-1.5 h-12 w-full rounded-xl border border-ink/70 bg-paper px-4 text-[15px] text-ink placeholder:text-mute/70 focus:border-ink focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ink"
       />
