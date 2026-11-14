@@ -98,3 +98,34 @@ export function assertPreparedPayment(tx, prepared, buyerAddress) {
   if (Buffer.from(memos[0].data).toString('utf8') !== prepared.memo) throw new Error('Prepared memo differs from the SP3ND order memo');
   return { amountAtomic: BigInt(prepared.amount_atomic), memo: prepared.memo, buyerAta, recipientAta };
 }
+
+const ASIN = /^[A-Z0-9]{10}$/i;
+const AMAZON_US = /^(?:www\.|smile\.)?amazon\.com$/i;
+
+export function parseProduct(input) {
+  const raw = String(input ?? '').trim();
+  if (!raw) throw new Error('Paste an Amazon product link or a 10-character ASIN.');
+  if (ASIN.test(raw)) return { asin: raw.toUpperCase(), url: `https://www.amazon.com/dp/${raw.toUpperCase()}` };
+  if (!/[./:]/.test(raw)) throw new Error(`"${raw.slice(0, 40)}" is not an ASIN. An ASIN is 10 letters and digits, like B00006IE7J.`);
+  let url;
+  try {
+    url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`);
+  } catch {
+    throw new Error(`"${raw.slice(0, 40)}" is not a product link or an ASIN. An ASIN is 10 letters and digits, like B00006IE7J.`);
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || !AMAZON_US.test(url.hostname)) {
+    throw new Error(`${url.hostname || 'That link'} is not an amazon.com product page. Cart shops amazon.com links and ASINs.`);
+  }
+  const asin = /\/(?:dp|gp\/product|gp\/aw\/d|exec\/obidos\/ASIN)\/([A-Z0-9]{10})(?:[/?#]|$)/i.exec(url.pathname)?.[1];
+  if (!asin) throw new Error('That amazon.com link is not a product page. Open the product and paste its /dp/ link.');
+  return { asin: asin.toUpperCase(), url: `https://www.amazon.com/dp/${asin.toUpperCase()}` };
+}
+
+export const MIN_LAMPORTS = 10_000n;
+
+export function fundingPlan({ usdc, lamports, needUsdc, solReserve }) {
+  const plan = [];
+  if (usdc < needUsdc) plan.push({ asset: 'usdc', amount: needUsdc - usdc });
+  if (lamports < MIN_LAMPORTS) plan.push({ asset: 'sol', amount: solReserve });
+  return plan;
+}

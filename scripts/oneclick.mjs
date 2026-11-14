@@ -11,7 +11,7 @@ export async function getSupportedTokens(fetchImpl = fetch) {
   return tokens;
 }
 
-export async function quoteExactOutput({ originAsset, destinationAsset, amount, recipient, refundTo }, fetchImpl = fetch) {
+export async function quoteExactOutput({ originAsset, destinationAsset, amount, recipient, refundTo, dry = false }, fetchImpl = fetch) {
   if (!originAsset || !destinationAsset || !recipient || !refundTo || !/^[1-9]\d*$/.test(String(amount))) throw new Error('1Click exact-output quote parameters are incomplete');
   const tokens = await getSupportedTokens(fetchImpl);
   if (!tokens.some((token) => token.assetId === originAsset)) throw new Error('Selected input asset is not currently supported by 1Click');
@@ -23,7 +23,7 @@ export async function quoteExactOutput({ originAsset, destinationAsset, amount, 
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      dry: false,
+      dry,
       swapType: 'EXACT_OUTPUT',
       slippageTolerance: 100,
       originAsset,
@@ -39,7 +39,7 @@ export async function quoteExactOutput({ originAsset, destinationAsset, amount, 
   });
   const result = await response.json();
   if (!response.ok) throw new Error(`1Click quote failed (HTTP ${response.status}): ${result.message ?? 'request rejected'}`);
-  if (String(result.quote?.amountOut) !== String(amount) || !result.quote?.depositAddress || !result.quote?.amountIn || !result.quote?.minAmountIn) {
+  if (String(result.quote?.amountOut) !== String(amount) || (!dry && !result.quote?.depositAddress) || !result.quote?.amountIn || !result.quote?.minAmountIn) {
     throw new Error('1Click did not return the exact output and deposit instructions requested');
   }
   return result;

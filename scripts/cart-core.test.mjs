@@ -92,3 +92,22 @@ test('accepts only the exact payment SP3ND quoted and rejects every tampered var
   extra.add(new TransactionInstruction({ programId: MEMO_PROGRAM_ID, keys: [], data: Buffer.from('extra') }));
   assert.throws(() => assertPreparedPayment(extra, prepared, buyer.toBase58()), /other than one USDC transfer/);
 });
+
+import { parseProduct, fundingPlan } from './cart-core.mjs';
+
+test('parseProduct accepts ASINs and amazon.com product links only', () => {
+  assert.equal(parseProduct('b00006ie7j').url, 'https://www.amazon.com/dp/B00006IE7J');
+  assert.equal(parseProduct('https://www.amazon.com/BIC-Pen/dp/B00006IE7J/ref=sr_1_1?th=1').asin, 'B00006IE7J');
+  assert.equal(parseProduct('amazon.com/gp/product/B00FLYWNYQ').asin, 'B00FLYWNYQ');
+  assert.throws(() => parseProduct('https://example.com/dp/B00006IE7J'), /not an amazon.com product page/);
+  assert.throws(() => parseProduct('B00006IE7'), /is not an ASIN/);
+  assert.throws(() => parseProduct('https://www.amazon.com/s?k=pens'), /not a product page/);
+  assert.throws(() => parseProduct(''), /Paste an Amazon/);
+  assert.throws(() => parseProduct('javascript:alert(1)'), /not an amazon.com/);
+});
+
+test('fundingPlan asks only for what the wallet lacks', () => {
+  assert.deepEqual(fundingPlan({ usdc: 6_050_000n, lamports: 5_000_000n, needUsdc: 6_050_000n, solReserve: 5_000_000n }), []);
+  assert.deepEqual(fundingPlan({ usdc: 1_000_000n, lamports: 0n, needUsdc: 6_050_000n, solReserve: 5_000_000n }), [
+    { asset: 'usdc', amount: 5_050_000n }, { asset: 'sol', amount: 5_000_000n }]);
+});

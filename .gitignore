@@ -4,3 +4,5 @@ target/
 node_modules/
 .sp3nd-session.json
 .sp3nd-client.json
+.cart-orders.json
+dist/
