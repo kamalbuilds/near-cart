@@ -87,10 +87,10 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
   const running = job?.status === 'running';
   const failed = job?.status === 'failed';
   return (
-    <div className="mt-5">
+    <div className="contents">
       {!running && (
         <>
-          <Btn type="button" onClick={start} disabled={pending || expired} className="sticky bottom-3 z-10 h-14 w-full text-[17px]">
+          <Btn type="button" onClick={start} disabled={pending || expired} className="sticky bottom-3 z-10 mt-5 h-14 w-full text-[17px]">
             {pending ? 'Starting…' : failed ? 'Try the payment again' : `Pay ${quote.total.toFixed(2)} USDC on testnet`}
           </Btn>
           <p className="mt-3 text-[14px] text-mute">
@@ -99,7 +99,7 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
         </>
       )}
       {running && job && (
-        <div aria-live="polite">
+        <div aria-live="polite" className="mt-5">
           <div className="flex items-baseline justify-between">
             <p className="text-[18px] font-bold tracking-tight">{job.queue > 0 ? `Waiting for the signer, ${job.queue} ahead` : 'Paying on two chains'}</p>
             <p className="num text-[18px] font-bold">{((now - startedAt) / 1000).toFixed(1)} s</p>
