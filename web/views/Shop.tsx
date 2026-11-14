@@ -93,7 +93,7 @@ export function Shop({ active }: { active: boolean }) {
   return (
     <div hidden={!active} className="pb-24">
       <div className="grid gap-x-14 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:grid-rows-[auto_1fr]">
-        <section className="pt-4 sm:pt-12 lg:col-start-1 lg:row-start-1">
+        <section className="pt-4 sm:pt-8 lg:col-start-1 lg:row-start-1">
           <h1 className="display max-w-[11em] text-[clamp(2rem,5.4vw,4.4rem)]">
             Buy it on Amazon.<br />Pay from any chain.
           </h1>
@@ -126,14 +126,14 @@ export function Shop({ active }: { active: boolean }) {
 
         </section>
 
-        <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:pt-12">
+        <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:pt-4">
           <div className="lg:sticky lg:top-6">
             {quote && item ? (
               <Receipt kind="quote" item={item} money={quote} expiresAt={quote.expiresAt} watch={watch} paid={paid}>
                 {testnet ? (
                   <>
-                    {!paid && <div className="mt-6 rounded-2xl bg-sage/60 p-4"><PayWith compact total={quote.total} value={asset} onChange={setAsset} /></div>}
-                    <TestnetPay quote={quote} expired={expired} onDone={() => setPaid(true)} />
+                    {!paid && <div className="mt-5 rounded-2xl bg-sage/60 p-4"><PayWith compact total={quote.total} value={asset} onChange={setAsset} /></div>}
+                    <TestnetPay quote={quote} expired={expired} assetId={asset} onDone={() => setPaid(true)} />
                   </>
                 ) : (
                   <a href="#pay" className="mt-6 flex h-14 w-full items-center justify-center rounded-full bg-ink text-[17px] font-semibold text-lime hover:bg-lime-deep">Choose how you pay</a>

@@ -18,6 +18,15 @@ export function Proof({ job, total }: { job: TestnetJob; total: number }) {
     <div className="mt-6" aria-live="polite">
       <p className="text-[20px] font-bold leading-tight tracking-tight">Paid in {job.seconds.toFixed(1)} seconds, two chains, no wallet installed.</p>
       <div className="mt-4 grid gap-2.5">
+        {r.route && !r.route.direct && (
+          <>
+            <div className="rounded-2xl bg-sage/60 px-4 py-3">
+              <span className="block text-[15px] font-bold">NEAR Intents routes {Number(r.route.amountIn).toPrecision(4).replace(/\.?0+$/, '')} {r.route.symbol}</span>
+              <span className="block text-[14px] text-mute">Live 1Click quote for exactly {Number(r.amount).toFixed(2)} USDC on Solana, about {r.route.seconds ?? 20} s on mainnet</span>
+            </div>
+            <div aria-hidden className="mx-auto -my-1 h-3" />
+          </>
+        )}
         <a href={`https://testnet.nearblocks.io/txns/${r.nearTx}`} target="_blank" rel="noreferrer" className="group flex items-center justify-between gap-3 rounded-2xl bg-sage px-4 py-3 transition-colors hover:bg-sage-2">
           <span><span className="block text-[15px] font-bold">NEAR testnet signs</span><span className="block text-[14px] text-mute">Chain Signatures returns an Ed25519 signature for {short(r.payer, 4, 4)}</span></span>
           <span className="num shrink-0 text-[14px] font-semibold underline underline-offset-4">{short(r.nearTx, 4, 4)}</span>
@@ -33,7 +42,7 @@ export function Proof({ job, total }: { job: TestnetJob; total: number }) {
   );
 }
 
-export function TestnetPay({ quote, expired, onDone }: { quote: Quote; expired: boolean; onDone: (job: TestnetJob) => void }) {
+export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; expired: boolean; assetId: string | null; onDone: (job: TestnetJob) => void }) {
   const [job, setJob] = useState<TestnetJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(0);
@@ -64,7 +73,7 @@ export function TestnetPay({ quote, expired, onDone }: { quote: Quote; expired: 
   async function start() {
     setError(null); setPending(true); setStartedAt(Date.now());
     try {
-      const next = await api<TestnetJob>('/api/testnet/pay', { cartId: quote.cartId });
+      const next = await api<TestnetJob>('/api/testnet/pay', { cartId: quote.cartId, assetId });
       if (alive.current) setJob(next);
     } catch (e) {
       if (alive.current) setError((e as Error).message);
@@ -78,11 +87,11 @@ export function TestnetPay({ quote, expired, onDone }: { quote: Quote; expired: 
   const running = job?.status === 'running';
   const failed = job?.status === 'failed';
   return (
-    <div className="mt-6">
+    <div className="mt-5">
       {!running && (
         <>
           <Btn type="button" onClick={start} disabled={pending || expired} className="sticky bottom-3 z-10 h-14 w-full text-[17px]">
-            {pending ? 'Starting…' : failed ? 'Try the payment again' : `Pay ${quote.total.toFixed(2)} USDC from NEAR testnet`}
+            {pending ? 'Starting…' : failed ? 'Try the payment again' : `Pay ${quote.total.toFixed(2)} USDC on testnet`}
           </Btn>
           <p className="mt-3 text-[14px] text-mute">
             {expired ? 'This quote expired. Price the item again.' : 'Cart’s NEAR testnet account signs for a Solana devnet wallet. Nothing to install, no funds needed.'}

@@ -225,6 +225,7 @@ async function runTestnetPay(job, quote) {
   try {
     job.queue = testnetQueue;
     testnetQueue += 1;
+    if (job.assetId) { try { job.route = await routeQuote(job.assetId, String(quote.cart.total_amount)); } catch { job.route = null; } }
     const result = await serial(async () => {
       testnetQueue -= 1;
       job.queue = 0;
@@ -234,7 +235,7 @@ async function runTestnetPay(job, quote) {
         asin: quote.cart.items?.[0]?.product_id ?? 'ITEM', onStep: mark,
       });
     });
-    job.result = { payer: result.payer, memo: result.memo, nearTx: result.nearTx, solanaTx: result.solanaTx, slot: result.slot, merchant: DEVNET.merchant.toBase58(), mint: DEVNET.mint.toBase58(), amount: String(quote.cart.total_amount) };
+    job.result = { route: job.route ?? null, payer: result.payer, memo: result.memo, nearTx: result.nearTx, solanaTx: result.solanaTx, slot: result.slot, merchant: DEVNET.merchant.toBase58(), mint: DEVNET.mint.toBase58(), amount: String(quote.cart.total_amount) };
     job.status = 'done';
   } catch (error) {
     const active = job.steps.find((entry) => entry.state === 'active') ?? job.steps.find((entry) => entry.state === 'pending');
@@ -265,6 +266,24 @@ async function warmQuotes() {
     try { await liveQuote({ asin, url: `https://www.amazon.com/dp/${asin}`, quantity: 1, postal: '10001', minutes: 22 }); } catch (error) { console.error(`warm ${asin}: ${error.message}`); }
   }
 }
+async function routeQuote(assetId, total) {
+  const need = toUsdcAtomicUnits(total);
+  if (need <= 0n) throw bad('Nothing to convert.');
+  const list = await tokens();
+  const origin = list.find((token) => token.assetId === assetId);
+  if (!origin) throw bad('That asset is not on the NEAR Intents token list.');
+  const route = { symbol: origin.symbol, chain: origin.blockchain, decimals: origin.decimals };
+  if (origin.assetId === SOLANA_USDC_ASSET_ID) return { ...route, direct: true, amountIn: formatUnits(need, 6), amountInUsd: Number(formatUnits(need, 6)), costUsd: 0 };
+  const { wallet_address: recipient } = await withMcp((_, session) => session);
+  const { quote, quoteRequest } = await quoteExactOutput({ originAsset: origin.assetId, destinationAsset: SOLANA_USDC_ASSET_ID, amount: need.toString(), recipient, refundTo: ACCOUNT, dry: true });
+  const amountInUsd = Number(quote.amountInUsd);
+  return {
+    ...route, direct: false, amountIn: quote.amountInFormatted, minAmountIn: formatUnits(quote.minAmountIn, origin.decimals),
+    amountInUsd, amountOutUsd: Number(quote.amountOutUsd), costUsd: Math.max(0, amountInUsd - Number(quote.amountOutUsd)),
+    seconds: quote.timeEstimate, deadline: quoteRequest?.deadline, quotedAt: new Date().toISOString(), wallet: recipient,
+  };
+}
+
 
 // ---- routes
 const ZIP = /^\d{5}(?:-\d{4})?$/;
@@ -307,23 +326,7 @@ const routes = {
       .sort((a, b) => a.blockchain.localeCompare(b.blockchain) || a.symbol.localeCompare(b.symbol));
   },
 
-  'POST /api/swap-quote': async ({ body }) => {
-    const need = toUsdcAtomicUnits(body.total);
-    if (need <= 0n) throw bad('Nothing to convert.');
-    const list = await tokens();
-    const origin = list.find((token) => token.assetId === body.assetId);
-    if (!origin) throw bad('That asset is not on the NEAR Intents token list.');
-    const route = { symbol: origin.symbol, chain: origin.blockchain, decimals: origin.decimals };
-    if (origin.assetId === SOLANA_USDC_ASSET_ID) return { ...route, direct: true, amountIn: formatUnits(need, 6), amountInUsd: Number(formatUnits(need, 6)), costUsd: 0 };
-    const { wallet_address: recipient } = await withMcp((_, session) => session);
-    const { quote, quoteRequest } = await quoteExactOutput({ originAsset: origin.assetId, destinationAsset: SOLANA_USDC_ASSET_ID, amount: need.toString(), recipient, refundTo: ACCOUNT, dry: true });
-    const amountInUsd = Number(quote.amountInUsd);
-    return {
-      ...route, direct: false, amountIn: quote.amountInFormatted, minAmountIn: formatUnits(quote.minAmountIn, origin.decimals),
-      amountInUsd, amountOutUsd: Number(quote.amountOutUsd), costUsd: Math.max(0, amountInUsd - Number(quote.amountOutUsd)),
-      seconds: quote.timeEstimate, deadline: quoteRequest?.deadline, quotedAt: new Date().toISOString(), wallet: recipient,
-    };
-  },
+  'POST /api/swap-quote': async ({ body }) => routeQuote(body.assetId, body.total),
 
   'POST /api/order': async ({ body, sessionId }) => {
     const cached = quotes.get(body.cartId);
@@ -395,7 +398,7 @@ const routes = {
     if (prior) return publicJob(prior);
     admitTestnet(sessionId);
     const id = randomUUID();
-    const job = { id, sessionId, cartId: quote.cart.cart_id, status: 'running', error: null, result: null, seconds: 0, queue: 0, steps: TESTNET_STEPS.map(([sid, label]) => ({ id: sid, label, state: 'pending', detail: null, link: null })) };
+    const job = { id, sessionId, assetId: typeof body.assetId === 'string' ? body.assetId : null, route: null, cartId: quote.cart.cart_id, status: 'running', error: null, result: null, seconds: 0, queue: 0, steps: TESTNET_STEPS.map(([sid, label]) => ({ id: sid, label, state: 'pending', detail: null, link: null })) };
     testnetJobs.set(id, job);
     if (testnetJobs.size > 300) testnetJobs.delete(testnetJobs.keys().next().value);
     runTestnetPay(job, quote);

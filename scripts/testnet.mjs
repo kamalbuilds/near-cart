@@ -113,7 +113,7 @@ export async function payOnTestnet({ network, account, total, cartId, asin, onSt
   if (held.lamports < 20_000n) throw new Error('The testnet wallet is out of devnet SOL for fees');
   onStep('built', { state: 'done', detail: `Transfer, memo and amount match the quote (${memo})` });
 
-  onStep('signed', { state: 'active', detail: `${account} asks the testnet MPC signer to sign` });
+  onStep('signed', { state: 'active', detail: 'Cart’s NEAR account asks the testnet MPC signer to sign' });
   const { signature, txHash } = await signWithNearAccount({ network, accountId: account, message: tx.serializeMessage() });
   const raw = attachEd25519Signature(tx, signature, payer);
   onStep('signed', { state: 'done', detail: 'Signature verified against the derived key', link: `https://testnet.nearblocks.io/txns/${txHash}`, ref: txHash });

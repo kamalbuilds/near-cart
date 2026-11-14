@@ -40,6 +40,6 @@ export const when = (iso: string): string => new Date(iso).toLocaleString('en-US
 export type TestnetStep = { id: string; label: string; state: 'pending' | 'active' | 'done' | 'failed'; detail: string | null; link: string | null; ref?: string };
 export type TestnetJob = {
   id: string; status: 'running' | 'done' | 'failed'; error: string | null; steps: TestnetStep[]; elapsed: number; seconds: number; queue: number;
-  result: { payer: string; memo: string; nearTx: string; solanaTx: string; slot: number; merchant: string; mint: string; amount: string } | null;
+  result: { route: SwapQuote | null; payer: string; memo: string; nearTx: string; solanaTx: string; slot: number; merchant: string; mint: string; amount: string } | null;
 };
 export type TestnetWallet = { address: string; account: string; nearNetwork: string; usdc: string; sol: string; merchant: string; mint: string };

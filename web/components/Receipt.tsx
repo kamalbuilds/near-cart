@@ -41,7 +41,7 @@ export function Receipt({ item, money, kind, expiresAt, orderNumber, status, wat
         <span className="num text-[14px] text-mute">{when(createdAt ?? new Date().toISOString())}</span>
       </header>
 
-      <div className="mt-5 flex gap-4">
+      <div className="mt-4 flex gap-4">
         <div className="grid size-24 shrink-0 place-items-center rounded-xl bg-white p-2">
           {item.image ? <img src={item.image} alt="" className="max-h-full max-w-full object-contain mix-blend-multiply" /> : <span className="text-[13px] text-mute">No image</span>}
         </div>
@@ -57,7 +57,7 @@ export function Receipt({ item, money, kind, expiresAt, orderNumber, status, wat
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-3">
         <Line k={`Item${item.quantity > 1 ? ` × ${item.quantity}` : ''}`} v={money.subtotal.toFixed(2)} />
         <Line k="Shipping" v={money.shipping ? money.shipping.toFixed(2) : 'Free'} />
         <Line k="Tax" v={kind === 'quote' && !money.tax ? 'set with address' : money.tax.toFixed(2)} dim={kind === 'quote' && !money.tax} />
@@ -73,7 +73,7 @@ export function Receipt({ item, money, kind, expiresAt, orderNumber, status, wat
       </div>
 
       {kind === 'quote' && expiresAt && !paid && (
-        <div className="mt-4">
+        <div className="mt-3">
           <div className="flex items-center justify-between text-[14px]">
             <span className={cn('font-semibold', expired && 'text-bad')}>{expired ? 'Quote expired' : 'Price holds for'}</span>
             <span className={cn('num', expired && 'text-bad')}>{expired ? '00:00' : clock(left ?? 0)}</span>
