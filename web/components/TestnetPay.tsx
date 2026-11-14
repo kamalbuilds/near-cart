@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 function StepIcon({ state }: { state: string }) {
   if (state === 'done') return <span className="grid size-6 place-items-center rounded-full bg-good text-white"><svg aria-hidden width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.5 4.8 9 10 3.2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>;
   if (state === 'active') return <span className="grid size-6 place-items-center rounded-full bg-lime"><svg aria-hidden className="spin" width="14" height="14" viewBox="0 0 14 14"><path d="M7 1.5a5.5 5.5 0 1 1-5.5 5.5" stroke="#10120e" strokeWidth="2" fill="none" strokeLinecap="round" /></svg></span>;
+  if (state === 'quote') return <span className="grid size-6 place-items-center rounded-full bg-sage-2 text-ink-2"><svg aria-hidden width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 6h9M7.5 3 10.5 6l-3 3" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>;
   if (state === 'failed') return <span className="grid size-6 place-items-center rounded-full bg-bad text-white"><svg aria-hidden width="10" height="10" viewBox="0 0 10 10"><path d="M2 2l6 6M8 2 2 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></span>;
   return <span className="size-6 rounded-full bg-sage" />;
 }
@@ -48,7 +49,7 @@ function Ledger({ job, quote }: { job: TestnetJob; quote: Quote }) {
       <p className="label">Payment receipt</p>
       <ol className="mt-1 divide-y divide-dashed divide-line">
         {route && !route.direct && (
-          <Line icon="done" title={`NEAR Intents routes ${trimNum(route.amountIn)} ${route.symbol}`} detail={`Live 1Click quote for exactly ${total.toFixed(2)} USDC on Solana, about ${route.seconds ?? 20} s on mainnet`} />
+          <Line icon="quote" title={`Quoted by NEAR Intents: ${trimNum(route.amountIn)} ${route.symbol} to ${total.toFixed(2)} USDC`} detail={`Live 1Click quote, about ${route.seconds ?? 20} s on mainnet. This run pays from the funded testnet wallet.`} />
         )}
         {job.steps.filter((s) => s.state !== 'pending').map((s) => (
           <Line key={s.id} icon={s.state} title={s.label}

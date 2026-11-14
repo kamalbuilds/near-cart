@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { api, type Order, type Quote } from '@/lib/api';
+import { api, short, type Order, type Quote } from '@/lib/api';
 import { Btn, ErrorNote, Field, SectionHead } from '@/components/ui';
 import { EmptyReceipt, Receipt, useNow } from '@/components/Receipt';
 import { PayWith } from '@/components/PayWith';
@@ -7,7 +7,7 @@ import { TestnetPay } from '@/components/TestnetPay';
 import { useMode } from '@/lib/mode';
 
 const SAMPLES: [string, string][] = [['BIC pens', 'B00006IE7J'], ['Instant Pot', 'B00FLYWNYQ']];
-const FIRST = 'B00006IE7J';
+const FIRST = 'https://www.amazon.com/dp/B00006IE7J';
 
 function watchLine(q: Quote): string {
   const key = `cart.watch.${q.asin}`;
@@ -22,6 +22,28 @@ function watchLine(q: Quote): string {
 }
 
 const blank = { recipient: '', email: '', phone: '', address1: '', address2: '', city: '', state: '', postalCode: '' };
+
+type Last = { title: string; total: string; seconds: number; nearTx: string; solanaTx: string; at: string };
+
+function LastPaid() {
+  const [last, setLast] = useState<Last | null>(null);
+  useEffect(() => {
+    api<Last>('/api/testnet/last').catch(() => fetch('/last-paid.json').then((r) => r.json() as Promise<Last>)).then(setLast).catch(() => setLast(null));
+  }, []);
+  if (!last) return <div aria-hidden className="h-40 max-w-2xl rounded-2xl bg-sage/50 lg:col-start-1 lg:row-start-2" />;
+  const chip = 'num inline-flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold underline underline-offset-4 transition-colors';
+  return (
+    <section aria-label="Latest payment" className="max-w-2xl self-start rounded-2xl bg-sage/70 p-5 lg:col-start-1 lg:row-start-2">
+      <p className="label">Latest payment, on chain</p>
+      <p className="mt-2 text-[20px] font-bold leading-tight tracking-tight">{Number(last.total).toFixed(2)} USDC paid in {last.seconds.toFixed(1)} seconds, two chains, no wallet installed.</p>
+      <p className="mt-1 line-clamp-1 text-[14px] text-mute">{last.title}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <a href={`https://testnet.nearblocks.io/txns/${last.nearTx}`} target="_blank" rel="noreferrer" className={`${chip} bg-paper hover:bg-white`}>NEAR testnet signs {short(last.nearTx, 4, 4)}</a>
+        <a href={`https://explorer.solana.com/tx/${last.solanaTx}?cluster=devnet`} target="_blank" rel="noreferrer" className={`${chip} bg-lime-pale hover:bg-lime/60`}>Solana devnet pays {short(last.solanaTx, 4, 4)}</a>
+      </div>
+    </section>
+  );
+}
 
 export function Shop({ active }: { active: boolean }) {
   const [input, setInput] = useState('');
@@ -116,7 +138,7 @@ export function Shop({ active }: { active: boolean }) {
             <div className="mt-4 flex flex-wrap items-center gap-2 text-[15px]">
               <span className="mr-1 text-mute">Or try</span>
               {SAMPLES.map(([name, asin]) => (
-                <button key={asin} type="button" onClick={() => { setInput(asin); void lookup(asin); }} className="h-10 rounded-full bg-sage px-4 font-semibold hover:bg-sage-2">
+                <button key={asin} type="button" onClick={() => { const u = `https://www.amazon.com/dp/${asin}`; setInput(u); void lookup(u); }} className="h-10 rounded-full bg-sage px-4 font-semibold hover:bg-sage-2">
                   {name}
                 </button>
               ))}
@@ -148,7 +170,8 @@ export function Shop({ active }: { active: boolean }) {
           </div>
         </aside>
 
-        <ul className="grid max-w-2xl gap-3 self-start sm:grid-cols-3 lg:col-start-1 lg:row-start-2">
+        {testnet && <LastPaid />}
+        {!testnet && <ul className="grid max-w-2xl gap-3 self-start sm:grid-cols-3 lg:col-start-1 lg:row-start-2">
           {[
             ['Amazon prices it', 'SP3ND checks the live price, shipping and tax and holds it for 30 minutes.'],
             ['NEAR signs', 'One NEAR account controls a Solana wallet through Chain Signatures. No Solana key exists.'],
@@ -159,7 +182,7 @@ export function Shop({ active }: { active: boolean }) {
               <p className="mt-1 text-[14px] leading-snug text-ink-2">{d}</p>
             </li>
           ))}
-        </ul>
+        </ul>}
       </div>
 
       {!testnet && (

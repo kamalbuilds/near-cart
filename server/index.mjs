@@ -237,6 +237,7 @@ async function runTestnetPay(job, quote) {
     });
     job.result = { route: job.route ?? null, payer: result.payer, memo: result.memo, nearTx: result.nearTx, solanaTx: result.solanaTx, slot: result.slot, merchant: DEVNET.merchant.toBase58(), mint: DEVNET.mint.toBase58(), amount: String(quote.cart.total_amount) };
     job.status = 'done';
+    lastPaid = { title: quote.cart.items?.[0]?.title ?? 'Amazon item', total: String(quote.cart.total_amount), seconds: Number(((Date.now() - started) / 1000).toFixed(1)), nearTx: result.nearTx, solanaTx: result.solanaTx, at: new Date().toISOString() };
   } catch (error) {
     const active = job.steps.find((entry) => entry.state === 'active') ?? job.steps.find((entry) => entry.state === 'pending');
     if (active) active.state = 'failed';
@@ -247,6 +248,7 @@ async function runTestnetPay(job, quote) {
   }
 }
 let testnetQueue = 0;
+let lastPaid = null;
 
 // ---- quote cache: SP3ND takes several seconds to price an item. A cached quote is served to a visitor while 10+ minutes of its 30 remain; the warmer renews it at 22.
 const quoteCache = new Map();
@@ -409,6 +411,11 @@ const routes = {
     const job = testnetJobs.get(query.get('id'));
     if (!job || job.sessionId !== sessionId) throw new HttpError(404, 'No testnet payment with that id in this browser session.');
     return publicJob(job);
+  },
+
+  'GET /api/testnet/last': async () => {
+    if (!lastPaid) throw new HttpError(404, 'No payment yet.');
+    return lastPaid;
   },
 
   'GET /api/testnet/wallet': async () => {
