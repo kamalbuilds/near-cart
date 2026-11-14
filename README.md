@@ -1,37 +1,44 @@
 # Cart
 
-Shop any amazon.com item and pay from any chain NEAR Intents supports. A NEAR account's Chain Signatures wallet settles the order in Solana USDC through SP3ND.
+[![judge](https://github.com/CryptoInnovators/near-cart/actions/workflows/judge.yml/badge.svg)](https://github.com/CryptoInnovators/near-cart/actions/workflows/judge.yml)
+
+Shop any amazon.com item and pay from a NEAR account. A NEAR key controls a Solana USDC wallet through Chain Signatures, SP3ND prices and places the real Amazon order, and NEAR Intents funds the wallet from 231 assets on 40 chains.
+
+Live: https://near-cart.earn-shield-alerts.workers.dev
+
+## Do this, see that
+
+1. Open the live URL. The receipt prints a live SP3ND quote for a real Amazon item within seconds.
+2. Press **Pay 5.57 USDC from NEAR testnet**. About 9 seconds later the receipt is stamped Paid and shows two links: the NEAR testnet transaction where Chain Signatures signed, and the Solana devnet transaction that paid. The merchant balance is read back from devnet and equals the quote to the micro-USDC.
+3. Paste any amazon.com link or ASIN, or press Instant Pot, and pay again. Each run is a fresh pair of transactions.
+4. Switch to **Mainnet** for the funded flow: US shipping form, a 1Click asset picker with a dry route quote, and the SP3ND order paid in Solana USDC.
+
+`npm run judge` checks the live page, the live API, the unit checks and both evidence transactions. See `docs/EVIDENCE.md` and `COMPANY.md`.
 
 ## What it does
 
-- **Live quote.** Paste an amazon.com link or an ASIN. SP3ND verifies the price against Amazon and Cart prints it as a receipt: item, shipping, tax, total in USDC, a 30 minute expiry clock and the store's verified badge.
-- **Pay from any chain.** The asset picker reads the 1Click token list (231 assets across 40 chains). Each pick shows a dry 1Click quote for the exact USDC the order needs, with the route NEAR Intents, Solana USDC, SP3ND order.
-- **US shipping form.** The store delivers within the United States. Tax and the final total come from the address.
-- **Order status.** Created, funded, payment prepared and checked, signed by Chain Signatures, paid on Solana with the transaction link, confirmed by SP3ND. Every step is driven by the real functions and polled to a terminal state.
-- **Orders.** Every order created in the browser session is read back from SP3ND.
-
-The SP3ND session, NEAR keys and Solana signing stay on the server. The browser only sees quotes, orders and public addresses.
+- **Live quote.** SP3ND verifies the price against Amazon. Cart prints item, shipping, tax and total in USDC with a 30 minute clock.
+- **Pay on testnet with nothing installed.** A server-side NEAR testnet account requests the signature from `v1.signer-prod.testnet`. Cart checks the transfer, memo and amount before asking, verifies the Ed25519 signature against the derived key, broadcasts to Solana devnet and reads the merchant balance back.
+- **Refuses forgeries.** A payment whose amount changes after signing is refused by the pre-signing check, by the client and by Solana devnet (`node scripts/testnet-tamper.mjs`).
+- **Pay from any chain on mainnet.** The asset picker reads the 1Click token list. Each pick shows a dry quote for the exact USDC the order needs.
+- **Order status.** Created, funded, prepared and checked, signed, paid with the transaction link, confirmed by SP3ND, each polled to a terminal state.
 
 ## Run
 
 ```sh
 npm install
-npm run api        # API on 127.0.0.1:4174, serves dist/ when built
+npm run api        # API on 127.0.0.1:4174, serves dist/ when built (CART_API_PORT to change)
 npm run dev        # Vite on 127.0.0.1:5174, proxies /api to the API
-npm test           # core payment checks
-npm run build
+npm test           # payment and signing checks
+npm run judge      # live site and evidence checks
 ```
 
-Payments are armed with `CART_ALLOW_PAY=1` on the API process. `/api/pay` also needs `confirm: true` and the exact order total in the request.
+Mainnet payments are armed with `CART_ALLOW_PAY=1` and need `confirm: true` plus the exact order total.
 
-## Public demo
+## Host
 
 ```sh
-CART_API_ORIGIN=https://<tunnel-host> bash scripts/deploy-worker.sh
+bash scripts/serve-hosted.sh
 ```
 
-The Cloudflare Worker serves `dist/` and forwards `/api/*` to the tunnel that points at `127.0.0.1:4174`.
-
-## CLI
-
-`bash scripts/quote.sh <amazon-url>` prints a live quote. `scripts/pay.mjs` runs the same order to payment from the command line.
+Starts the API, opens a Cloudflare tunnel to it and deploys the Worker that serves `dist/` and forwards `/api/*`.
