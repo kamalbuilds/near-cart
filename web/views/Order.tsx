@@ -102,7 +102,7 @@ export function OrderView({ orderId }: { orderId: string }) {
             {job?.error && <ErrorNote>{job.error}</ErrorNote>}
             {job?.funding.map((f) => (
               <div key={f.asset} className="mt-4 rounded-2xl bg-ink p-4 text-lime">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-lime/70">{f.direct ? `Send ${f.asset === 'usdc' ? 'USDC' : 'SOL'} on Solana` : `Deposit ${f.symbol} on ${chainName(f.chain)}`} · {f.state.replace('_', ' ')}</p>
+                <p className="text-[13px] font-semibold text-lime/70">{f.direct ? `Send ${f.asset === 'usdc' ? 'USDC' : 'SOL'} on Solana` : `Deposit ${f.symbol} on ${chainName(f.chain)}`} · {f.state.replace('_', ' ')}</p>
                 <p className="num mt-1 break-all text-[14px]">{f.amountIn ? `${f.amountIn} ${f.symbol} → ` : ''}{f.depositAddress}{f.depositMemo ? ` memo ${f.depositMemo}` : ''}</p>
               </div>
             ))}
@@ -112,14 +112,14 @@ export function OrderView({ orderId }: { orderId: string }) {
             <>
               <section aria-labelledby="wallet">
                 <SectionHead n="05" title="Cart wallet"><span id="wallet" className="sr-only">Cart wallet</span></SectionHead>
-                <div className="card mt-4 rounded-[var(--radius-card)] border border-ink/70 bg-paper p-5">
+                <div className="mt-4 rounded-[var(--radius-card)] bg-paper p-5">
                   <dl className="grid gap-4 sm:grid-cols-3">
                     <div><dt className="label">Solana address</dt><dd className="num mt-1 break-all text-[13px]">{wallet ? <a className="underline underline-offset-4" href={`https://solscan.io/account/${wallet.address}`} target="_blank" rel="noreferrer">{short(wallet.address, 6, 6)}</a> : '…'}</dd></div>
                     <div><dt className="label">USDC held</dt><dd className="num mt-1 text-[22px]">{wallet?.usdc ?? '…'}</dd></div>
                     <div><dt className="label">Order needs</dt><dd className="num mt-1 text-[22px]">{order.total.toFixed(2)}</dd></div>
                   </dl>
                   {wallet && <p className="mt-4 text-[13px] text-ink-2">Derived from <span className="num">{wallet.account}</span> by NEAR Chain Signatures. {short6 ? 'Fund it from the route below and Cart pays when the deposit lands.' : 'It holds enough USDC to pay now.'}</p>}
-                  {prep && <p className="num mt-3 border-t border-dashed border-line pt-3 text-[12px] text-ink-2">SP3ND receives {prep.amount} {prep.currency} at {short(prep.recipient, 5, 5)} · memo {prep.memo}<br />Checked: {prep.checks}.</p>}
+                  {prep && <p className="num mt-3  pt-3 text-[12px] text-ink-2">SP3ND receives {prep.amount} {prep.currency} at {short(prep.recipient, 5, 5)} · memo {prep.memo}<br />Checked: {prep.checks}.</p>}
                   {prepError && <ErrorNote>{prepError}</ErrorNote>}
                 </div>
               </section>

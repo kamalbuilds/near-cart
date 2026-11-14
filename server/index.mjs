@@ -246,6 +246,25 @@ async function runTestnetPay(job, quote) {
 }
 let testnetQueue = 0;
 
+// ---- quote cache: SP3ND takes several seconds to price an item. A cached quote is served to a visitor while 10+ minutes of its 30 remain; the warmer renews it at 22.
+const quoteCache = new Map();
+const holds = (cart, minutes) => Date.parse(cart.expires_at) - Date.now() > minutes * 60_000;
+async function liveQuote({ asin, url, quantity, postal, fresh: bypass, minutes = 10 }) {
+  const key = `${asin}|${postal}|${quantity}`;
+  const hit = quoteCache.get(key);
+  if (!bypass && hit && holds(hit, minutes)) return hit;
+  const cart = await withMcp((mcp) => quoteWithRetry(mcp, { productUrl: url, quantity, country: 'US', postal, attempts: 3 }));
+  quotes.set(cart.cart_id, { cart, postal });
+  if (!bypass) quoteCache.set(key, cart);
+  return cart;
+}
+const WARM = ['B00006IE7J', 'B00FLYWNYQ'];
+async function warmQuotes() {
+  for (const asin of WARM) {
+    try { await liveQuote({ asin, url: `https://www.amazon.com/dp/${asin}`, quantity: 1, postal: '10001', minutes: 22 }); } catch (error) { console.error(`warm ${asin}: ${error.message}`); }
+  }
+}
+
 // ---- routes
 const ZIP = /^\d{5}(?:-\d{4})?$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -277,8 +296,7 @@ const routes = {
     if (!ZIP.test(postal)) throw bad('Use a US ZIP code, like 10001.');
     const quantity = Number(body.quantity ?? 1);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 5) throw bad('Quantity is 1 to 5.');
-    const cart = await withMcp((mcp) => quoteWithRetry(mcp, { productUrl: url, quantity, country: 'US', postal, attempts: 3 }));
-    quotes.set(cart.cart_id, { cart, postal });
+    const cart = await liveQuote({ asin, url, quantity, postal, fresh: body.fresh === true });
     return { asin, ...normCart(cart), zip: postal };
   },
 
@@ -442,4 +460,8 @@ createServer(async (req, res) => {
   } catch (error) {
     send(error.status ?? 502, { error: error.message });
   }
-}).listen(PORT, '127.0.0.1', () => console.log(`cart api on http://127.0.0.1:${PORT} (payments ${PAY_ENABLED ? 'enabled' : 'off'})`));
+}).listen(PORT, '127.0.0.1', () => {
+  console.log(`cart api on http://127.0.0.1:${PORT} (payments ${PAY_ENABLED ? 'enabled' : 'off'})`);
+  void warmQuotes();
+  setInterval(() => void warmQuotes(), 5 * 60_000).unref();
+});

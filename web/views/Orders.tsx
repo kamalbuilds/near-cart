@@ -22,19 +22,19 @@ export function OrdersView({ active }: { active: boolean }) {
       {!orders && !error && <p className="mt-10 text-[17px] font-medium pulse">Reading each order from SP3ND…</p>}
       {orders && (
         <>
-          <dl className="mt-8 grid max-w-xl grid-cols-3 gap-px overflow-hidden rounded-2xl border border-ink/70 bg-ink/70">
+          <dl className="mt-8 grid max-w-xl grid-cols-3 gap-px overflow-hidden rounded-2xl bg-ink/70">
             {[['Orders', String(orders.length)], ['Paid', String(paidCount)], ['Open', String(open)]].map(([k, v]) => (
               <div key={k} className="bg-paper px-5 py-4"><dt className="label">{k}</dt><dd className="num mt-1 text-[32px] leading-none">{v}</dd></div>
             ))}
           </dl>
           {orders.length === 0 ? (
-            <div className="mt-8 max-w-xl rounded-[var(--radius-card)] border border-dashed border-ink/50 p-8">
+            <div className="mt-8 max-w-xl rounded-[var(--radius-card)] bg-sage p-8">
               <p className="text-[20px] font-bold tracking-tight">No orders in this browser yet.</p>
               <p className="mt-1 text-[14px] text-ink-2">Orders you create here are read back from SP3ND on this page.</p>
               <a href="#/" className="mt-5 inline-flex h-12 items-center rounded-full bg-lime px-6 font-semibold ring-[1.5px] ring-ink hover:bg-lime-hi">Shop an item</a>
             </div>
           ) : (
-            <ul className="mt-8 divide-y divide-line overflow-hidden rounded-[var(--radius-card)] border border-ink/70 bg-paper">
+            <ul className="mt-8  overflow-hidden rounded-[var(--radius-card)] bg-paper">
               {orders.map((o) => {
                 const paid = isPaid(o.status);
                 const item = o.items[0];

@@ -2,8 +2,9 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react
 import { cn } from '@/lib/utils';
 
 const BTN = {
-  primary: 'bg-lime text-ink hover:bg-lime-hi shadow-[0_1px_0_rgba(14,15,12,.9)_inset,0_0_0_1.5px_var(--color-ink)]',
+  primary: 'bg-ink text-lime hover:bg-lime-deep',
   dark: 'bg-ink text-lime hover:bg-lime-deep',
+  lime: 'bg-lime text-ink hover:bg-lime-hi',
   soft: 'bg-sage text-ink hover:bg-line',
   ghost: 'bg-transparent text-ink underline decoration-1 underline-offset-4 hover:decoration-2',
 };
@@ -27,7 +28,7 @@ export function Field({ label, hint, className, ...rest }: InputHTMLAttributes<H
       <input
         aria-label={label}
         {...rest}
-        className="mt-1.5 h-12 w-full rounded-xl border border-ink/70 bg-paper px-4 text-[15px] text-ink placeholder:text-mute/70 focus:border-ink focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="mt-1.5 h-12 w-full rounded-xl bg-paper px-4 text-[16px] text-ink placeholder:text-mute/70 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ink"
       />
       {hint && <span className="mt-1 block text-[12px] text-mute">{hint}</span>}
     </label>
@@ -51,10 +52,9 @@ export function Dot({ tone }: { tone: 'good' | 'warn' | 'bad' | 'mute' }) {
   return <span aria-hidden className={cn('inline-block size-2 rounded-full', color)} />;
 }
 
-export function SectionHead({ n, title, children }: { n: string; title: string; children?: ReactNode }) {
+export function SectionHead({ title, children }: { n?: string; title: string; children?: ReactNode }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className="num text-[13px] text-mute">{n}</span>
       <h2 className="text-[26px] font-bold tracking-tight">{title}</h2>
       {children && <div className="ml-auto">{children}</div>}
     </div>
@@ -62,5 +62,5 @@ export function SectionHead({ n, title, children }: { n: string; title: string; 
 }
 
 export function ErrorNote({ children }: { children: ReactNode }) {
-  return <p role="alert" className="mt-3 rounded-xl border border-bad/40 bg-bad/8 px-4 py-3 text-[14px] font-medium text-[#8a1c21]">{children}</p>;
+  return <p role="alert" className="mt-3 rounded-xl bg-bad/10 px-4 py-3 text-[14px] font-medium text-[#8a1c21]">{children}</p>;
 }

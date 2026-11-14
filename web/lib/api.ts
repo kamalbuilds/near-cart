@@ -36,3 +36,10 @@ export const short = (s: string, a = 4, b = 4): string => (s.length > a + b + 1 
 export const PAID = ['paid', 'ordered', 'shipped', 'delivered'];
 export const isPaid = (status: string): boolean => PAID.includes(status.toLowerCase());
 export const when = (iso: string): string => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+export type TestnetStep = { id: string; label: string; state: 'pending' | 'active' | 'done' | 'failed'; detail: string | null; link: string | null; ref?: string };
+export type TestnetJob = {
+  id: string; status: 'running' | 'done' | 'failed'; error: string | null; steps: TestnetStep[]; elapsed: number; seconds: number; queue: number;
+  result: { payer: string; memo: string; nearTx: string; solanaTx: string; slot: number; merchant: string; mint: string; amount: string } | null;
+};
+export type TestnetWallet = { address: string; account: string; nearNetwork: string; usdc: string; sol: string; merchant: string; mint: string };

@@ -19,7 +19,7 @@ function Hop({ k, v, sub, last }: { k: string; v: string; sub?: string; last?: b
         {!last && <span className="wire-v absolute bottom-[-6px] top-5 w-0.5" />}
       </span>
       <div className={last ? '' : 'pb-5'}>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-lime/60">{k}</p>
+        <p className="text-[13px] font-semibold text-lime/60">{k}</p>
         <p className="num text-[17px] leading-snug text-lime">{v}</p>
         {sub && <p className="num mt-0.5 text-[12px] text-lime/60">{sub}</p>}
       </div>
@@ -30,9 +30,9 @@ function Hop({ k, v, sub, last }: { k: string; v: string; sub?: string; last?: b
 function Route({ q, total, busy, onRefresh }: { q: SwapQuote; total: number; busy: boolean; onRefresh: () => void }) {
   const trim = (s: string) => (s.length > 10 ? Number(s).toPrecision(6).replace(/\.?0+$/, '') : s);
   return (
-    <div className="card mt-5 rounded-[var(--radius-card)] bg-ink p-5 text-lime sm:p-6" aria-label="Payment route">
+    <div className="mt-5 rounded-[var(--radius-card)] bg-ink p-5 text-lime sm:p-6" aria-label="Payment route">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-lime/70">Route · dry quote from 1Click</p>
+        <p className="text-[13px] font-semibold text-lime/70">Route, dry quote from 1Click</p>
         <button onClick={onRefresh} className="text-[12px] font-semibold text-lime underline underline-offset-4" disabled={busy}>{busy ? 'Refreshing' : 'Refresh'}</button>
       </div>
       <ol className="mt-5">
@@ -42,7 +42,7 @@ function Route({ q, total, busy, onRefresh }: { q: SwapQuote; total: number; bus
         <Hop k="SP3ND order" v="Amazon order paid" sub="signed by NEAR Chain Signatures" last />
       </ol>
       {!q.direct && (
-        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-lime/20 pt-4 text-[13px]">
+        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 border-lime/20 pt-4 text-[13px]">
           <div><dt className="text-lime/60">Cost over the item</dt><dd className="num text-[20px]">{usd(q.costUsd)}</dd></div>
           <div><dt className="text-lime/60">Min deposit, 1% slippage</dt><dd className="num text-[20px]">{trim(q.minAmountIn ?? q.amountIn)}</dd></div>
         </dl>
