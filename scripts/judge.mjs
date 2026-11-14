@@ -1,7 +1,7 @@
 // npm run judge: unit checks, the live site, and the evidence transactions, against real endpoints.
 import { spawnSync } from 'node:child_process';
 
-const LIVE = process.env.CART_LIVE_URL ?? 'https://near-cart.nearbuild.workers.dev';
+const LIVE = process.env.CART_LIVE_URL ?? 'https://near-cart.nearlive.workers.dev';
 const SOLANA_TX = '4DTDZ1BmtLpMsBGo5FNGzfrS9k27esj5htTi8vRDyWVRMyr2mzo1L1N9E5vMBNwCrD2uvMfygAhwJJbUKPgi1yyE';
 const NEAR_TX = 'FuLvRaYixAYo36myyeZczp5iPbgfYFkDDXeYCmVyHfoS';
 const NEAR_ACCOUNT = 'cart-spike-1313-kamal.testnet';

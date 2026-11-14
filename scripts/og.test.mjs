@@ -10,7 +10,7 @@ const meta = (key) => new RegExp(`<meta (?:property|name)="${key}" content="([^"
 test('link card tags are present and point at our origin', () => {
   for (const key of ['og:title', 'og:description', 'og:image', 'og:url', 'twitter:card', 'theme-color']) assert.ok(meta(key), `${key} missing`);
   assert.equal(meta('twitter:card'), 'summary_large_image');
-  assert.match(meta('og:image'), /^https:\/\/near-cart\.nearbuild\.workers\.dev\/og\.png$/);
+  assert.match(meta('og:image'), /^https:\/\/near-cart\.nearlive\.workers\.dev\/og\.png$/);
 });
 
 test('og.png is a 1200x630 PNG', () => {

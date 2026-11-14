@@ -4,7 +4,7 @@
 
 Shop any amazon.com item and pay from a NEAR account. A NEAR key controls a Solana USDC wallet through Chain Signatures, SP3ND prices and places the real Amazon order, and NEAR Intents funds the wallet from 231 assets on 40 chains.
 
-Live: https://near-cart.nearbuild.workers.dev
+Live: https://near-cart.nearlive.workers.dev
 
 ## Do this, see that
 
