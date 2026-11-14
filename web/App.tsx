@@ -61,7 +61,7 @@ export function App() {
           {wallet && (
             <a href={mode === 'testnet' ? `https://explorer.solana.com/address/${wallet.address}?cluster=devnet` : `https://solscan.io/account/${wallet.address}`} target="_blank" rel="noreferrer" title={`Chain Signatures wallet of ${wallet.account}`}
               className="num hidden h-11 items-center gap-2 rounded-full bg-paper px-4 hover:bg-lime-pale sm:flex">
-              <span aria-hidden className="size-2 rounded-full bg-good" />{short(wallet.address, 4, 4)}<span className="text-mute">{mode === 'testnet' ? 'devnet' : `${wallet.usdc} USDC`}</span>
+              <span aria-hidden className="size-2 rounded-full bg-good" />{short(wallet.address, 4, 4)}<span className="text-mute">{mode === 'testnet' ? 'testnet' : `${wallet.usdc} USDC`}</span>
             </a>
           )}
         </div>

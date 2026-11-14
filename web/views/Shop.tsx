@@ -38,8 +38,8 @@ function LastPaid() {
       <p className="mt-2 text-[20px] font-bold leading-tight tracking-tight">{Number(last.total).toFixed(2)} USDC paid in {last.seconds.toFixed(1)} seconds, two chains, no wallet installed.</p>
       <p className="mt-1 line-clamp-1 text-[14px] text-mute">{last.title}</p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <a href={`https://testnet.nearblocks.io/txns/${last.nearTx}`} target="_blank" rel="noreferrer" className={`${chip} bg-paper hover:bg-white`}>NEAR testnet signs {short(last.nearTx, 4, 4)}</a>
-        <a href={`https://explorer.solana.com/tx/${last.solanaTx}?cluster=devnet`} target="_blank" rel="noreferrer" className={`${chip} bg-lime-pale hover:bg-lime/60`}>Solana devnet pays {short(last.solanaTx, 4, 4)}</a>
+        <a href={`https://testnet.nearblocks.io/txns/${last.nearTx}`} target="_blank" rel="noreferrer" className={`${chip} bg-paper hover:bg-white`}>NEAR signs {short(last.nearTx, 4, 4)}</a>
+        <a href={`https://explorer.solana.com/tx/${last.solanaTx}?cluster=devnet`} target="_blank" rel="noreferrer" className={`${chip} bg-lime-pale hover:bg-lime/60`}>Solana pays {short(last.solanaTx, 4, 4)}</a>
       </div>
     </section>
   );
@@ -175,7 +175,7 @@ export function Shop({ active }: { active: boolean }) {
           {[
             ['Amazon prices it', 'SP3ND checks the live price, shipping and tax and holds it for 30 minutes.'],
             ['NEAR signs', 'One NEAR account controls a Solana wallet through Chain Signatures. No Solana key exists.'],
-            ['USDC settles', testnet ? 'The payment lands on Solana devnet and the merchant balance is read back.' : 'SP3ND receives Solana USDC and places the Amazon order.'],
+            ['USDC settles', testnet ? 'The payment lands on Solana and the merchant balance is read back.' : 'SP3ND receives Solana USDC and places the Amazon order.'],
           ].map(([t, d]) => (
             <li key={t} className="rounded-2xl bg-sage/70 p-4">
               <p className="text-[16px] font-bold tracking-tight">{t}</p>

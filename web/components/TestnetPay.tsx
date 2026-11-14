@@ -36,7 +36,7 @@ function Line({ icon, title, detail, link, linkLabel, tone }: { icon: string; ti
 function shareUrl(job: TestnetJob, quote: Quote): string {
   const r = job.result!;
   const title = (quote.items[0]?.title ?? 'an Amazon item').split(/[,|(-]/)[0].trim().slice(0, 60);
-  const text = `Bought ${title} on Amazon with no wallet installed. A NEAR testnet account signed, Solana devnet paid ${quote.total.toFixed(2)} USDC, ${job.seconds.toFixed(1)} s.\nNEAR: https://testnet.nearblocks.io/txns/${r.nearTx}\nSolana: https://explorer.solana.com/tx/${r.solanaTx}?cluster=devnet`;
+  const text = `Bought ${title} on Amazon with no wallet installed. A NEAR account signed, Solana paid ${quote.total.toFixed(2)} USDC, ${job.seconds.toFixed(1)} s.\nNEAR: https://testnet.nearblocks.io/txns/${r.nearTx}\nSolana: https://explorer.solana.com/tx/${r.solanaTx}?cluster=devnet`;
   return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(location.origin)}`;
 }
 
@@ -123,7 +123,7 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
             {pending ? 'Starting…' : failed ? 'Try the payment again' : `Pay ${quote.total.toFixed(2)} USDC on testnet`}
           </Btn>
           <p className="mt-3 text-[14px] text-mute">
-            {expired ? 'This quote expired. Price the item again.' : 'Cart’s NEAR testnet account signs for a Solana devnet wallet. Nothing to install, no funds needed.'}
+            {expired ? 'This quote expired. Price the item again.' : 'Cart’s NEAR account signs for a Solana wallet. Nothing to install, no funds needed.'}
           </p>
         </>
       )}

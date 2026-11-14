@@ -88,14 +88,14 @@ export async function readBackPayment(signature, { amountAtomic, memo, merchant 
   for (;;) {
     const parsed = await onDevnet((connection) => connection.getParsedTransaction(signature, { commitment: 'confirmed', maxSupportedTransactionVersion: 0 }));
     if (parsed) {
-      if (parsed.meta?.err) throw new Error(`Devnet rejected the payment: ${JSON.stringify(parsed.meta.err)}`);
+      if (parsed.meta?.err) throw new Error(`Solana rejected the payment: ${JSON.stringify(parsed.meta.err)}`);
       const sum = (rows) => (rows ?? []).filter((row) => row.owner === merchant.toBase58() && row.mint === mint.toBase58()).reduce((acc, row) => acc + BigInt(row.uiTokenAmount.amount), 0n);
       const delta = sum(parsed.meta.postTokenBalances) - sum(parsed.meta.preTokenBalances);
       if (delta !== amountAtomic) throw new Error(`Merchant received ${delta} instead of ${amountAtomic}`);
-      if (!(parsed.meta.logMessages ?? []).some((line) => line.includes(memo))) throw new Error('Memo is missing from the devnet logs');
+      if (!(parsed.meta.logMessages ?? []).some((line) => line.includes(memo))) throw new Error('Memo is missing from the Solana logs');
       return { slot: parsed.slot, blockTime: parsed.blockTime, delta: delta.toString() };
     }
-    if (Date.now() > deadline) throw new Error('Devnet did not confirm the payment in time');
+    if (Date.now() > deadline) throw new Error('Solana did not confirm the payment in time');
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 }
@@ -110,7 +110,7 @@ export async function payOnTestnet({ network, account, total, cartId, asin, onSt
   assertTestnetPayment(tx, { payer, amountAtomic, memo });
   const held = await devnetBalances(payer);
   if (held.usdc < amountAtomic) throw new Error('The testnet wallet is out of test USDC');
-  if (held.lamports < 20_000n) throw new Error('The testnet wallet is out of devnet SOL for fees');
+  if (held.lamports < 20_000n) throw new Error('The testnet wallet is out of SOL for fees');
   onStep('built', { state: 'done', detail: `Transfer, memo and amount match the quote (${memo})` });
 
   onStep('signed', { state: 'active', detail: 'Cart’s NEAR account asks the testnet MPC signer to sign' });
@@ -118,12 +118,12 @@ export async function payOnTestnet({ network, account, total, cartId, asin, onSt
   const raw = attachEd25519Signature(tx, signature, payer);
   onStep('signed', { state: 'done', detail: 'Signature verified against the derived key', link: `https://testnet.nearblocks.io/txns/${txHash}`, ref: txHash });
 
-  onStep('paid', { state: 'active', detail: 'Submitting to Solana devnet' });
+  onStep('paid', { state: 'active', detail: 'Submitting to Solana' });
   const sig = await onDevnet((connection) => connection.sendRawTransaction(raw, { skipPreflight: false, maxRetries: 3 }));
   await onDevnet((connection) => connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed'));
-  onStep('paid', { state: 'done', detail: 'Landed on Solana devnet', link: `https://explorer.solana.com/tx/${sig}?cluster=devnet`, ref: sig });
+  onStep('paid', { state: 'done', detail: 'Landed on Solana', link: `https://explorer.solana.com/tx/${sig}?cluster=devnet`, ref: sig });
 
-  onStep('verified', { state: 'active', detail: 'Reading the merchant balance back from devnet' });
+  onStep('verified', { state: 'active', detail: 'Reading the merchant balance back from Solana' });
   const read = await readBackPayment(sig, { amountAtomic, memo });
   onStep('verified', { state: 'done', detail: `Merchant balance rose by exactly ${total} USDC` });
   return { payer, memo, nearTx: txHash, solanaTx: sig, ...read };

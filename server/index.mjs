@@ -201,8 +201,8 @@ async function runPay(job, sourceAssetId) {
 const TESTNET_STEPS = [
   ['built', 'Payment built and checked against the quote'],
   ['signed', 'Signed on NEAR testnet by Chain Signatures'],
-  ['paid', 'Landed on Solana devnet'],
-  ['verified', 'Merchant balance read back from devnet'],
+  ['paid', 'Landed on Solana'],
+  ['verified', 'Merchant balance read back from Solana'],
 ];
 const testnetJobs = new Map();
 const testnetLedger = { day: '', count: 0, bySession: new Map() };
