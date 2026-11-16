@@ -1,9 +1,9 @@
 // npm run judge: unit checks, the live site, and the evidence transactions, against real endpoints.
 import { spawnSync } from 'node:child_process';
 
-const LIVE = process.env.CART_LIVE_URL ?? 'https://near-cart.nearlive.workers.dev';
-const SOLANA_TX = '4DTDZ1BmtLpMsBGo5FNGzfrS9k27esj5htTi8vRDyWVRMyr2mzo1L1N9E5vMBNwCrD2uvMfygAhwJJbUKPgi1yyE';
-const NEAR_TX = 'FuLvRaYixAYo36myyeZczp5iPbgfYFkDDXeYCmVyHfoS';
+const LIVE = process.env.CART_LIVE_URL ?? 'https://cart-checkout-near.vercel.app';
+const SOLANA_TX = '3AQcwE6pktkBmTHjk49tJi6dAmfzKAr7N78AzigJB9YfBqVvXowSDsvvjZoeZxnoZa8CZP3yiGooKnPTSsYxMBMe';
+const NEAR_TX = 'DyfGFxMhD4QMoodxqfAuo6sEVYSdeVCkK7XQpQ4SsNhA';
 const NEAR_ACCOUNT = 'cart-spike-1313-kamal.testnet';
 const rpc = async (url, method, params) => (await (await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(20_000) })).json()).result;
 
@@ -16,7 +16,8 @@ const checks = [
     if (!r || r.meta.err) throw new Error('missing or failed');
   }],
   ['NEAR testnet signer call is final', async () => {
-    const r = await rpc('https://near-testnet.drpc.org', 'tx', { tx_hash: NEAR_TX, sender_account_id: NEAR_ACCOUNT, wait_until: 'EXECUTED' });
+    const args = { tx_hash: NEAR_TX, sender_account_id: NEAR_ACCOUNT, wait_until: 'EXECUTED' };
+    const r = (await rpc('https://rpc.testnet.near.org', 'tx', args).catch(() => null)) ?? await rpc('https://near-testnet.drpc.org', 'tx', args);
     if (!r || r.transaction.receiver_id !== 'v1.signer-prod.testnet' || !/FINAL|EXECUTED/.test(r.final_execution_status)) throw new Error('not final');
   }],
 ];
