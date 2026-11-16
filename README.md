@@ -2,6 +2,8 @@
 
 [![judge](https://github.com/CryptoInnovators/near-cart/actions/workflows/judge.yml/badge.svg)](https://github.com/CryptoInnovators/near-cart/actions/workflows/judge.yml)
 
+[![Cart live: a live SP3ND quote for an Amazon item, ready to pay from a NEAR account](docs/screenshot.png)](https://cart-checkout-near.vercel.app)
+
 Shop any amazon.com item and pay from a NEAR account. A NEAR key controls a Solana USDC wallet through Chain Signatures, SP3ND prices and places the real Amazon order, and NEAR Intents funds the wallet from 231 assets on 40 chains.
 
 Live: https://cart-checkout-near.vercel.app
