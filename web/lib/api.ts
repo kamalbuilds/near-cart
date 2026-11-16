@@ -1,7 +1,7 @@
 export type Item = { asin: string; title: string; image: string | null; brand: string | null; store: string; price: number; quantity: number; verified: boolean; url: string };
 export type Money = { subtotal: number; shipping: number; tax: number; fee: number; total: number; currency: string };
-export type Quote = Money & { asin: string; cartId: string; paymentReady: boolean; expiresAt: string; items: Item[]; zip: string };
-export type Order = Money & { orderId: string; orderNumber: string; status: string; paymentReady: boolean; txSignature: string | null; createdAt: string; paidAt: string | null; items: Item[]; error?: string };
+export type Quote = Money & { asin: string; cartId: string; ticket: string; paymentReady: boolean; expiresAt: string; items: Item[]; zip: string };
+export type Order = Money & { orderId: string; ref: string; orderNumber: string; status: string; paymentReady: boolean; txSignature: string | null; createdAt: string; paidAt: string | null; items: Item[]; error?: string };
 export type Token = { assetId: string; symbol: string; blockchain: string; decimals: number; price: number };
 export type SwapQuote = {
   symbol: string; chain: string; decimals: number; direct: boolean; amountIn: string; minAmountIn?: string;
@@ -19,6 +19,31 @@ export const sessionId = (): string => {
   if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); }
   return id;
 };
+
+// Order refs are sealed by the server; this browser keeps the list.
+const ordersKey = 'cart.orders';
+export const orderRefs = (): string[] => { try { return JSON.parse(localStorage.getItem(ordersKey) ?? '[]'); } catch { return []; } };
+export const rememberOrder = (ref: string): void => localStorage.setItem(ordersKey, JSON.stringify([ref, ...orderRefs().filter((r) => r !== ref)].slice(0, 20)));
+
+// Reads an NDJSON response, calling onEvent for each line as it arrives.
+export async function apiStream<T>(path: string, body: unknown, onEvent: (event: T) => void): Promise<void> {
+  const res = await fetch(path, { method: 'POST', headers: { 'x-cart-session': sessionId(), 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok || !res.body) {
+    const json = await res.json().catch(() => ({ error: `Server answered HTTP ${res.status} with no JSON.` }));
+    throw new Error(json.error ?? `HTTP ${res.status}`);
+  }
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) if (line.trim()) onEvent(JSON.parse(line) as T);
+  }
+  if (buffer.trim()) onEvent(JSON.parse(buffer) as T);
+}
 
 export async function api<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const res = await fetch(path, {

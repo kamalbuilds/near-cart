@@ -2,14 +2,16 @@ import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tmpdir } from 'node:os';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const AUTH = 'https://happy-dragon-88.authkit.app';
 const SITE = 'https://www.sp3nd.shop';
 const MCP_URL = 'https://mcp.sp3nd.shop/mcp';
 const REDIRECT = 'http://127.0.0.1:8976/callback';
-const CLIENT_FILE = join(ROOT, '.sp3nd-client.json');
-const SESSION_FILE = join(ROOT, '.sp3nd-session.json');
+const STATE = process.env.CART_STATE_DIR ?? (process.env.VERCEL ? tmpdir() : ROOT);
+const CLIENT_FILE = join(STATE, '.sp3nd-client.json');
+const SESSION_FILE = join(STATE, '.sp3nd-session.json');
 
 const b64url = (buffer) => buffer.toString('base64url');
 

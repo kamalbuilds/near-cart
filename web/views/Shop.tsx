@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { api, short, type Order, type Quote } from '@/lib/api';
+import { api, rememberOrder, short, type Order, type Quote } from '@/lib/api';
 import { Btn, ErrorNote, Field, SectionHead } from '@/components/ui';
 import { EmptyReceipt, Receipt, useNow } from '@/components/Receipt';
 import { PayWith } from '@/components/PayWith';
@@ -98,9 +98,10 @@ export function Shop({ active }: { active: boolean }) {
     setOrdering(true); setOrderError(null);
     try {
       const { email, ...address } = form;
-      const order = await api<Order>('/api/order', { cartId: quote.cartId, email, address });
-      if (asset) sessionStorage.setItem(`cart.src.${order.orderId}`, asset);
-      location.hash = `#/order/${encodeURIComponent(order.orderId)}`;
+      const order = await api<Order>('/api/order', { ticket: quote.ticket, email, address });
+      rememberOrder(order.ref);
+      if (asset) sessionStorage.setItem(`cart.src.${order.ref}`, asset);
+      location.hash = `#/order/${encodeURIComponent(order.ref)}`;
     } catch (err) {
       setOrderError((err as Error).message);
     } finally {

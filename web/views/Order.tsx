@@ -31,6 +31,7 @@ function Timeline({ steps }: { steps: Step[] }) {
   );
 }
 
+// orderId is the sealed order ref from the URL; the server resolves it to the SP3ND order id.
 export function OrderView({ orderId }: { orderId: string }) {
   const [d, setD] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export function OrderView({ orderId }: { orderId: string }) {
   const [payError, setPayError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    try { setD(await api<Detail>(`/api/order?id=${encodeURIComponent(orderId)}`)); setError(null); } catch (e) { setError((e as Error).message); }
+    try { setD(await api<Detail>(`/api/order?ref=${encodeURIComponent(orderId)}`)); setError(null); } catch (e) { setError((e as Error).message); }
   }, [orderId]);
 
   useEffect(() => { void load(); }, [load]);
@@ -59,14 +60,14 @@ export function OrderView({ orderId }: { orderId: string }) {
   useEffect(() => {
     if (!d || paid) return;
     setPrepError(null);
-    api<Prepared>('/api/prepare', { orderId }).then(setPrep).catch((e: Error) => setPrepError(e.message));
+    api<Prepared>('/api/prepare', { ref: orderId }).then(setPrep).catch((e: Error) => setPrepError(e.message));
   }, [orderId, paid, d?.order.total]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pay = async () => {
     if (!d) return;
     setPayError(null);
     try {
-      await api('/api/pay', { orderId, confirm: true, expectTotal: d.order.total.toFixed(2), sourceAssetId: asset ?? undefined });
+      await api('/api/pay', { ref: orderId, confirm: true, expectTotal: d.order.total.toFixed(2), sourceAssetId: asset ?? undefined });
       await load();
     } catch (e) { setPayError((e as Error).message); }
   };

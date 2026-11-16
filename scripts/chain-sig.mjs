@@ -21,10 +21,15 @@ function provider(network) {
   return new FailoverRpcProvider(NETWORKS[network].rpcs.map((url) => new JsonRpcProvider({ url })));
 }
 
-function loadAccount(network, accountId) {
+// Hosted: CART_NEAR_PRIVATE_KEY. Local: the near-cli credentials file.
+export function nearPrivateKey(network, accountId) {
+  if (process.env.CART_NEAR_PRIVATE_KEY) return process.env.CART_NEAR_PRIVATE_KEY.trim();
   const file = join(homedir(), '.near-credentials', network, `${accountId}.json`);
-  const key = JSON.parse(readFileSync(file, 'utf8')).private_key;
-  return new Account(accountId, provider(network), new KeyPairSigner(KeyPair.fromString(key)));
+  return JSON.parse(readFileSync(file, 'utf8')).private_key;
+}
+
+function loadAccount(network, accountId) {
+  return new Account(accountId, provider(network), new KeyPairSigner(KeyPair.fromString(nearPrivateKey(network, accountId))));
 }
 
 export async function derivedSolanaAddress(network, accountId) {

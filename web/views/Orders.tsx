@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, isPaid, usd, when, type Order } from '@/lib/api';
+import { api, isPaid, orderRefs, usd, when, type Order } from '@/lib/api';
 import { Chip, Dot, ErrorNote } from '@/components/ui';
 
 export function OrdersView({ active }: { active: boolean }) {
@@ -8,7 +8,7 @@ export function OrdersView({ active }: { active: boolean }) {
 
   useEffect(() => {
     if (!active) return;
-    api<Order[]>('/api/orders').then((o) => { setOrders(o); setError(null); }).catch((e: Error) => setError(e.message));
+    api<Order[]>('/api/orders', { refs: orderRefs() }).then((o) => { setOrders(o); setError(null); }).catch((e: Error) => setError(e.message));
   }, [active]);
 
   const paidCount = orders?.filter((o) => isPaid(o.status)).length ?? 0;
@@ -40,7 +40,7 @@ export function OrdersView({ active }: { active: boolean }) {
                 const item = o.items[0];
                 return (
                   <li key={o.orderId}>
-                    <a href={`#/order/${encodeURIComponent(o.orderId)}`} className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-lime-pale sm:px-5">
+                    <a href={`#/order/${encodeURIComponent(o.ref)}`} className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-lime-pale sm:px-5">
                       <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-white p-1">
                         {item?.image ? <img src={item.image} alt="" className="size-full object-contain mix-blend-multiply" /> : null}
                       </div>

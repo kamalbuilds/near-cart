@@ -6,3 +6,4 @@ node_modules/
 .sp3nd-client.json
 .cart-orders.json
 dist/
+.vercel

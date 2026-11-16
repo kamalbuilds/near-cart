@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import nacl from 'tweetnacl';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -128,4 +129,19 @@ export function fundingPlan({ usdc, lamports, needUsdc, solReserve }) {
   if (usdc < needUsdc) plan.push({ asset: 'usdc', amount: needUsdc - usdc });
   if (lamports < MIN_LAMPORTS) plan.push({ asset: 'sol', amount: solReserve });
   return plan;
+}
+
+// Sealed values let any stateless API instance trust what an earlier instance handed the browser.
+export function seal(secret, value) {
+  const body = Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${body}.${createHmac('sha256', secret).update(body).digest('base64url')}`;
+}
+
+export function unseal(secret, token) {
+  const [body, mac, extra] = String(token ?? '').split('.');
+  if (!body || !mac || extra !== undefined) return null;
+  const expected = createHmac('sha256', secret).update(body).digest();
+  const given = Buffer.from(mac, 'base64url');
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
+  return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
 }

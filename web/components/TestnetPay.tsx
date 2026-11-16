@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, short, type Quote, type TestnetJob } from '@/lib/api';
+import { apiStream, short, type Quote, type TestnetJob } from '@/lib/api';
 import { Btn } from '@/components/ui';
 import { useNow } from '@/components/Receipt';
 import { cn } from '@/lib/utils';
@@ -84,29 +84,21 @@ export function TestnetPay({ quote, expired, assetId, onDone }: { quote: Quote; 
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => { setJob(null); setError(null); }, [quote.cartId]);
 
-  useEffect(() => {
-    if (!job || job.status !== 'running') return;
-    const timer = setTimeout(async () => {
-      if (document.visibilityState !== 'visible') { setJob({ ...job }); return; }
-      try {
-        const next = await api<TestnetJob>(`/api/testnet/job?id=${encodeURIComponent(job.id)}`);
-        if (!alive.current) return;
-        setJob(next);
-        if (next.status === 'done') done.current(next);
-      } catch (e) {
-        if (alive.current) { setError((e as Error).message); setJob(null); }
-      }
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [job]);
-
   async function start() {
     setError(null); setPending(true); setStartedAt(Date.now());
+    let last: TestnetJob | null = null;
     try {
-      const next = await api<TestnetJob>('/api/testnet/pay', { cartId: quote.cartId, assetId });
-      if (alive.current) setJob(next);
+      await apiStream<TestnetJob>('/api/testnet/pay', { ticket: quote.ticket, assetId }, (next) => {
+        last = next;
+        if (!alive.current) return;
+        setPending(false);
+        setJob(next);
+      });
+      const final = last as TestnetJob | null;
+      if (!final || final.status === 'running') throw new Error('The payment stream closed before the receipt finished. Check the wallet link for the transaction.');
+      if (final.status === 'done' && alive.current) done.current(final);
     } catch (e) {
-      if (alive.current) setError((e as Error).message);
+      if (alive.current) { setError((e as Error).message); setJob((j) => (j && j.status === 'running' ? { ...j, status: 'failed' } : j)); }
     } finally {
       if (alive.current) setPending(false);
     }

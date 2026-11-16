@@ -111,3 +111,16 @@ test('fundingPlan asks only for what the wallet lacks', () => {
   assert.deepEqual(fundingPlan({ usdc: 1_000_000n, lamports: 0n, needUsdc: 6_050_000n, solReserve: 5_000_000n }), [
     { asset: 'usdc', amount: 5_050_000n }, { asset: 'sol', amount: 5_000_000n }]);
 });
+
+test('sealed tickets round-trip and refuse tampering or another key', async () => {
+  const { seal, unseal } = await import('./cart-core.mjs');
+  const key = Buffer.alloc(32, 7);
+  const token = seal(key, { cart_id: 'c1', total_amount: '12.34' });
+  assert.deepEqual(unseal(key, token), { cart_id: 'c1', total_amount: '12.34' });
+  const [body, mac] = token.split('.');
+  const forged = Buffer.from(JSON.stringify({ cart_id: 'c1', total_amount: '0.01' })).toString('base64url');
+  assert.equal(unseal(key, `${forged}.${mac}`), null);
+  assert.equal(unseal(Buffer.alloc(32, 8), token), null);
+  assert.equal(unseal(key, `${body}.${mac}.x`), null);
+  assert.equal(unseal(key, 'garbage'), null);
+});
